@@ -1,19 +1,10 @@
-const CACHE_NAME = 'opaustro-unified-v6';
+const CACHE_NAME = 'opaustro-portal-v7';
 const APP_SHELL = [
   './',
   './index.html',
-  './cabinets.html',
-  './tablero.html',
-  './revision.html',
-  './ventas.html',
-  './ventas-hub.html',
-  './ventas-reporte.html',
-  './flujo-caja-opaustro.html',
-  './ventas_data.js',
+  './auth.js',
   './manifest.webmanifest',
-  './EMPRESA.jpeg',
   './logo_opaustro.png',
-  './logo.png',
   './magnum.avif',
   './icon-192.png',
   './icon-512.png'

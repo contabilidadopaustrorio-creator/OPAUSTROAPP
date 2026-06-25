@@ -8,98 +8,267 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Opaustro">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta http-equiv="Content-Security-Policy" content="
+  default-src 'self';
+  script-src 'self' 'unsafe-inline';
+  style-src 'self' 'unsafe-inline';
+  img-src 'self' data:;
+  connect-src 'self' https://script.google.com https://script.googleusercontent.com;
+  frame-src https://app.powerbi.com;
+">
 <link rel="manifest" href="manifest.webmanifest">
-<title>Opaustro — Portal de Aplicaciones</title>
+<title>Opaustro — Portal de Acceso</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
-body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;min-height:100vh;background:#0a1628;display:flex;align-items:center;justify-content:center;padding:24px;position:relative;overflow:hidden;}
-body:before{content:"";position:fixed;inset:0;background:radial-gradient(ellipse at 20% 18%,rgba(0,91,158,.28) 0%,transparent 46%),radial-gradient(ellipse at 82% 82%,rgba(124,58,237,.18) 0%,transparent 44%),linear-gradient(135deg,#0a1628 0%,#0d2240 55%,#0a1628 100%);pointer-events:none;}
-body:after{content:"";position:fixed;inset:0;background-image:linear-gradient(rgba(255,255,255,.018) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.018) 1px,transparent 1px);background-size:54px 54px;pointer-events:none;}
-.portal{width:100%;max-width:960px;position:relative;z-index:1;}
-.top{text-align:center;margin-bottom:46px;}
-.logo-wrap{display:inline-flex;align-items:center;justify-content:center;background:#fff;border-radius:16px;padding:16px 30px;margin-bottom:22px;box-shadow:0 16px 40px rgba(0,0,0,.45),0 0 0 1px rgba(255,255,255,.06);}
-.logo-wrap img{height:48px;width:auto;display:block;}
-.top h1{font-size:30px;font-weight:800;color:#fff;letter-spacing:.01em;}
-.top .accent{width:54px;height:3px;background:linear-gradient(90deg,#0077cc,#7c3aed);border-radius:3px;margin:14px auto 16px;}
-.top p{font-size:13px;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.18em;font-weight:600;}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:18px;}
-.mod{position:relative;border-radius:18px;padding:0;text-align:left;transition:.22s cubic-bezier(.2,.7,.3,1);cursor:pointer;text-decoration:none;display:block;overflow:hidden;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.09);min-height:188px;}
-.mod .body{padding:26px 22px 22px;position:relative;z-index:2;height:100%;display:flex;flex-direction:column;}
+html,body{height:100%;}
+body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;min-height:100vh;background:#0a1628;display:flex;align-items:center;justify-content:center;padding:20px;position:relative;overflow:hidden;}
+body:before{content:"";position:fixed;inset:0;background:radial-gradient(ellipse at 18% 18%,rgba(0,91,158,.32) 0%,transparent 48%),radial-gradient(ellipse at 82% 82%,rgba(124,58,237,.20) 0%,transparent 44%),linear-gradient(135deg,#0a1628 0%,#0d2240 55%,#0a1628 100%);pointer-events:none;z-index:0;}
+body:after{content:"";position:fixed;inset:0;background-image:linear-gradient(rgba(255,255,255,.018) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.018) 1px,transparent 1px);background-size:54px 54px;pointer-events:none;z-index:0;}
+
+/* ── LOGIN ── */
+#screen-login{position:relative;z-index:1;width:100%;max-width:420px;animation:fadeIn .3s ease;}
+.card{background:#fff;border-radius:20px;padding:38px 36px 32px;box-shadow:0 40px 100px rgba(0,0,0,.55),0 0 0 1px rgba(255,255,255,.06);}
+.logo-w{display:flex;align-items:center;justify-content:center;margin-bottom:24px;}
+.logo-w img{height:46px;width:auto;}
+.card h1{font-size:20px;font-weight:900;color:#0a1628;text-align:center;letter-spacing:-.01em;margin-bottom:4px;}
+.card .sub{font-size:12px;color:#687386;text-align:center;margin-bottom:26px;letter-spacing:.03em;}
+.field{margin-bottom:14px;}
+.field label{display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#687386;margin-bottom:5px;}
+.field select,.field input{width:100%;border:1.5px solid #e2e8f0;border-radius:9px;padding:11px 13px;font-size:14px;color:#0a1628;outline:none;font-family:inherit;background:#f8fafc;transition:.15s;}
+.field select:focus,.field input:focus{border-color:#0077cc;box-shadow:0 0 0 3px rgba(0,119,204,.12);background:#fff;}
+.btn-login{width:100%;padding:13px;background:linear-gradient(135deg,#005B9E,#0077cc);color:#fff;font-size:15px;font-weight:800;border:none;border-radius:10px;cursor:pointer;letter-spacing:.04em;transition:.2s;margin-top:4px;}
+.btn-login:hover{background:linear-gradient(135deg,#004d87,#006ab5);box-shadow:0 8px 24px rgba(0,91,158,.4);}
+.btn-login:disabled{opacity:.6;cursor:not-allowed;}
+.err{font-size:12px;color:#dc2626;text-align:center;min-height:18px;margin-top:6px;display:none;}
+.err.on{display:block;}
+.spinner{display:none;width:20px;height:20px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite;margin:0 auto;}
+.spinner.on{display:block;}
+.pass-wrap{position:relative;}
+.pass-wrap input{padding-right:40px;}
+.eye{position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#94a3b8;font-size:17px;padding:4px;}
+
+/* ── LAUNCHER ── */
+#screen-launcher{display:none;position:relative;z-index:1;width:100%;max-width:960px;animation:fadeIn .3s ease;}
+.top{text-align:center;margin-bottom:42px;}
+.logo-wrap{display:inline-flex;align-items:center;justify-content:center;background:#fff;border-radius:16px;padding:14px 28px;margin-bottom:18px;box-shadow:0 16px 40px rgba(0,0,0,.45);}
+.logo-wrap img{height:44px;width:auto;}
+.top h1{font-size:28px;font-weight:800;color:#fff;}
+.top .acc{width:54px;height:3px;background:linear-gradient(90deg,#0077cc,#7c3aed);border-radius:3px;margin:12px auto 14px;}
+.top .greet{font-size:13px;color:rgba(255,255,255,.55);letter-spacing:.08em;}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;}
+.mod{position:relative;border-radius:18px;text-align:left;transition:.22s cubic-bezier(.2,.7,.3,1);cursor:pointer;text-decoration:none;display:block;overflow:hidden;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.09);min-height:182px;}
+.mod .body{padding:24px 20px 20px;position:relative;z-index:2;height:100%;display:flex;flex-direction:column;}
 .mod .bar{height:4px;width:100%;}
-.mod.active:hover{transform:translateY(-6px);border-color:rgba(255,255,255,.22);box-shadow:0 22px 48px rgba(0,0,0,.45);}
-.mod.active:hover .glow{opacity:.9;}
+.mod:hover{transform:translateY(-6px);border-color:rgba(255,255,255,.22);box-shadow:0 22px 48px rgba(0,0,0,.45);}
+.mod:hover .glow{opacity:.9;}
 .glow{position:absolute;top:-40%;right:-30%;width:200px;height:200px;border-radius:50%;filter:blur(46px);opacity:.5;transition:.22s;z-index:1;}
-.mod.disabled{opacity:.5;cursor:not-allowed;pointer-events:none;}
-.ico{width:54px;height:54px;border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:28px;margin-bottom:auto;box-shadow:0 8px 20px rgba(0,0,0,.3);}
-.name{font-size:17px;font-weight:800;color:#fff;letter-spacing:.05em;margin-top:18px;}
-.desc{font-size:11px;color:rgba(255,255,255,.6);margin-top:5px;line-height:1.5;}
-.soon{display:inline-block;font-size:9px;font-weight:700;color:rgba(255,255,255,.55);margin-top:8px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);padding:3px 9px;border-radius:20px;text-transform:uppercase;letter-spacing:.1em;}
-.arrow{position:absolute;bottom:20px;right:20px;font-size:15px;color:rgba(255,255,255,.45);transition:.2s;z-index:2;}
-.mod.active:hover .arrow{color:#fff;transform:translateX(3px);}
-/* colores por modulo */
+.ico{width:50px;height:50px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:26px;box-shadow:0 8px 20px rgba(0,0,0,.3);}
+.name{font-size:16px;font-weight:800;color:#fff;letter-spacing:.04em;margin-top:16px;}
+.desc{font-size:11px;color:rgba(255,255,255,.6);margin-top:4px;line-height:1.5;}
+.arrow{position:absolute;bottom:16px;right:16px;font-size:14px;color:rgba(255,255,255,.45);transition:.2s;z-index:2;}
+.mod:hover .arrow{color:#fff;transform:translateX(3px);}
 .m-log .bar{background:linear-gradient(90deg,#005B9E,#0099ff);}.m-log .ico{background:linear-gradient(135deg,#005B9E,#0077cc);}.m-log .glow{background:#0077cc;}
-.m-ger .bar{background:linear-gradient(90deg,#7c3aed,#a855f7);}.m-ger .ico{background:linear-gradient(135deg,#7c3aed,#9d4edd);}.m-ger .glow{background:#9d4edd;}
 .m-ven .bar{background:linear-gradient(90deg,#047857,#10b981);}.m-ven .ico{background:linear-gradient(135deg,#047857,#059669);}.m-ven .glow{background:#059669;}
-.m-th  .bar{background:linear-gradient(90deg,#b45309,#f59e0b);}.m-th .ico{background:linear-gradient(135deg,#b45309,#d97706);}
-.footer{text-align:center;margin-top:38px;font-size:11px;color:rgba(255,255,255,.28);letter-spacing:.04em;}
-@media(max-width:540px){.top h1{font-size:23px;}.grid{grid-template-columns:1fr 1fr;gap:12px;}.mod{min-height:160px;}.mod .body{padding:20px 16px 18px;}.ico{width:46px;height:46px;font-size:23px;}.name{font-size:14px;}}
+.m-ger .bar{background:linear-gradient(90deg,#7c3aed,#a855f7);}.m-ger .ico{background:linear-gradient(135deg,#7c3aed,#9d4edd);}.m-ger .glow{background:#9d4edd;}
+.rol-badge{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:20px;font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);color:rgba(255,255,255,.7);margin-bottom:14px;}
+.rol-badge.admin{background:rgba(124,58,237,.22);border-color:rgba(124,58,237,.4);color:#c4b5fd;}
+.write-badge{display:none;}
+.rol-badge.admin .write-badge{display:inline;}
+.bottom-row{display:flex;justify-content:space-between;align-items:center;margin-top:32px;}
+.footer{font-size:11px;color:rgba(255,255,255,.28);}
+.btn-salir{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.13);border-radius:8px;padding:7px 14px;color:rgba(255,255,255,.55);font-size:12px;cursor:pointer;font-family:inherit;transition:.15s;}
+.btn-salir:hover{background:rgba(255,255,255,.12);color:#fff;}
+.no-modules{color:rgba(255,255,255,.5);text-align:center;padding:40px 20px;font-size:14px;}
+
+@keyframes fadeIn{from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:translateY(0);}}
+@keyframes spin{to{transform:rotate(360deg);}}
+@media(max-width:540px){.grid{grid-template-columns:1fr 1fr;gap:12px;}.mod{min-height:154px;}.top h1{font-size:22px;}.card{padding:28px 22px 24px;}}
 </style>
 </head>
 <body>
-<div class="portal">
+
+<!-- ── PANTALLA LOGIN ── -->
+<div id="screen-login">
+  <div class="card">
+    <div class="logo-w">
+      <img src="./logo_opaustro.png" alt="Opaustro" onerror="this.style.display='none'">
+    </div>
+    <h1>Opaustro Cía. Ltda.</h1>
+    <p class="sub">Sistema Corporativo &mdash; Inicio de Sesión</p>
+    <form id="loginForm" onsubmit="doLogin(event)">
+      <div class="field">
+        <label for="sel-user">Usuario</label>
+        <select id="sel-user" required>
+          <option value="">Cargando usuarios…</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="inp-pass">Contraseña</label>
+        <div class="pass-wrap">
+          <input type="password" id="inp-pass" required placeholder="••••••" autocomplete="current-password">
+          <button type="button" class="eye" onclick="togglePass()" title="Ver/ocultar">👁</button>
+        </div>
+      </div>
+      <div class="err" id="login-err"></div>
+      <button type="submit" class="btn-login" id="btn-login">
+        <span id="btn-txt">Ingresar</span>
+        <span class="spinner" id="spinner"></span>
+      </button>
+    </form>
+  </div>
+</div>
+
+<!-- ── PANTALLA MÓDULOS ── -->
+<div id="screen-launcher">
   <div class="top">
     <div class="logo-wrap"><img src="./logo_opaustro.png" alt="Opaustro" onerror="this.parentNode.style.display='none'"></div>
     <h1>Opaustro Cía. Ltda.</h1>
-    <div class="accent"></div>
-    <p>Portal Corporativo</p>
-  </div>
-  <div class="grid">
-    <a class="mod m-log active" href="./cabinets.html">
-      <div class="bar"></div>
-      <div class="glow"></div>
-      <div class="body">
-        <div class="ico">🚚</div>
-        <div class="name">LOGÍSTICA</div>
-        <div class="desc">Cabinets · Taller · Movimientos</div>
-        <span class="arrow">→</span>
-      </div>
-    </a>
-    <a class="mod m-ger active" href="./tablero.html">
-      <div class="bar"></div>
-      <div class="glow"></div>
-      <div class="body">
-        <div class="ico">📊</div>
-        <div class="name">GERENCIA</div>
-        <div class="desc">Tablero · Costos · Indicadores</div>
-        <span class="arrow">→</span>
-      </div>
-    </a>
-    <a class="mod m-ven active" href="./ventas-hub.html">
-      <div class="bar"></div>
-      <div class="glow"></div>
-      <div class="body">
-        <div class="ico">💰</div>
-        <div class="name">VENTAS</div>
-        <div class="desc">Mapa Territorial · Indicadores</div>
-        <span class="arrow">→</span>
-      </div>
-    </a>
-    <div class="mod m-th disabled">
-      <div class="bar"></div>
-      <div class="body">
-        <div class="ico">👥</div>
-        <div class="name">TALENTO HUMANO</div>
-        <div class="desc">Manual de funciones-reportes</div>
-        <span class="soon">Próximamente</span>
-      </div>
+    <div class="acc"></div>
+    <div>
+      <div class="rol-badge" id="rol-badge">● <span id="rol-txt">—</span> <span class="write-badge">✏️ Escritura</span></div>
+      <div class="greet" id="greet-txt"></div>
     </div>
   </div>
-  <div class="footer">Opaustro · Sistema interno v2.0 · 2026</div>
+  <div class="grid" id="modulos-grid">
+    <div class="no-modules">Verificando acceso…</div>
+  </div>
+  <div class="bottom-row">
+    <div class="footer">Opaustro · Portal Corporativo · 2026</div>
+    <button class="btn-salir" onclick="OPA.logout()">Cerrar sesión</button>
+  </div>
 </div>
+
+<script src="./auth.js"></script>
 <script>
-if('serviceWorker' in navigator){
-  window.addEventListener('load', function(){
-    navigator.serviceWorker.register('./sw.js').catch(function(e){console.warn('SW error:',e);});
+// ── URL del GAS (misma que en auth.js) ────────────────────────
+var GAS_URL = OPA.gasUrl();
+
+// Módulos disponibles por clave
+var MODULOS_INFO = {
+  logistica: { icon:'🚚', name:'LOGÍSTICA',  desc:'Cabinets · Taller · Movimientos', cls:'m-log', url:'https://contabilidadopaustrorio-creator.github.io/OPAUSTRO-LOGISTICA/' },
+  ventas:    { icon:'💰', name:'VENTAS',     desc:'Mapa Territorial · Indicadores',  cls:'m-ven', url:'https://contabilidadopaustrorio-creator.github.io/OPAUSTRO-VENTAS/' },
+  gerencia:  { icon:'📊', name:'GERENCIA',   desc:'Tablero · Costos · Flujo de Caja',cls:'m-ger', url:'https://contabilidadopaustrorio-creator.github.io/OPAUSTRO-GERENCIA/' }
+};
+
+// ── Arranque: cargar usuarios del sheet para el select ────────
+(async function init() {
+  // Si ya hay sesión activa, mostrar launcher directamente
+  var token = sessionStorage.getItem('opa_token');
+  if (token) {
+    var sess = await OPA.init('portal');
+    if (sess) { mostrarLauncher(sess); return; }
+  }
+  // Sin sesión: mostrar login y cargar usuarios
+  cargarUsuarios();
+})();
+
+async function cargarUsuarios() {
+  var sel = document.getElementById('sel-user');
+  try {
+    var r = await fetch(GAS_URL + '?action=getUsuarios', { redirect: 'follow' });
+    var d = await r.json();
+    var lista = d.usuarios || [];
+    sel.innerHTML = '<option value="">Selecciona tu usuario…</option>';
+    lista.forEach(function(u) {
+      var op = document.createElement('option');
+      op.value = u.usuario;
+      op.textContent = u.usuario;
+      sel.appendChild(op);
+    });
+  } catch(e) {
+    sel.innerHTML = '<option value="">Escribe tu usuario manualmente</option>';
+    // Cambiar el select por un input de texto si GAS no responde
+    var inp = document.createElement('input');
+    inp.type = 'text'; inp.id = 'sel-user'; inp.required = true;
+    inp.placeholder = 'Nombre de usuario'; inp.className = sel.className;
+    inp.style.cssText = sel.style.cssText;
+    sel.parentNode.replaceChild(inp, sel);
+  }
+}
+
+async function doLogin(ev) {
+  ev.preventDefault();
+  var usuario = (document.getElementById('sel-user').value || '').trim();
+  var clave   = document.getElementById('inp-pass').value.trim();
+  if (!usuario || !clave) return showErr('Completa usuario y contraseña.');
+
+  setBusy(true);
+  try {
+    var r = await fetch(GAS_URL + '?action=login&usuario=' + encodeURIComponent(usuario) + '&clave=' + encodeURIComponent(clave), { redirect: 'follow' });
+    var d = await r.json();
+    if (!d.ok) { showErr(d.error || 'Usuario o clave incorrectos.'); setBusy(false); return; }
+
+    sessionStorage.setItem('opa_token', d.token);
+    sessionStorage.setItem('opa_sess', JSON.stringify({
+      token: d.token, nombre: d.nombre, rol: d.rol,
+      modulos: d.modulos, puedeEscribir: d.puedeEscribir,
+      exp: Date.now() + 30 * 60 * 1000
+    }));
+    mostrarLauncher(d);
+  } catch(e) {
+    showErr('Error de conexión. Verifica tu internet e inténtalo de nuevo.');
+  }
+  setBusy(false);
+}
+
+function mostrarLauncher(sess) {
+  document.getElementById('screen-login').style.display    = 'none';
+  document.getElementById('screen-launcher').style.display = 'block';
+
+  // Badge de rol
+  var badge = document.getElementById('rol-badge');
+  var rolTxt = (sess.rol || '').toUpperCase();
+  document.getElementById('rol-txt').textContent = rolTxt;
+  if (sess.rol === 'admin') badge.classList.add('admin');
+  document.getElementById('greet-txt').textContent = 'Bienvenido, ' + (sess.nombre || '');
+
+  // Construir grid de módulos
+  var grid = document.getElementById('modulos-grid');
+  var modulos = (sess.modulos || []).filter(function(m){ return m !== 'portal'; });
+
+  if (!modulos.length) {
+    grid.innerHTML = '<div class="no-modules">No tienes módulos asignados. Contacta al administrador.</div>';
+    return;
+  }
+
+  var html = '';
+  modulos.forEach(function(key) {
+    var m = MODULOS_INFO[key];
+    if (!m) return;
+    var destUrl = m.url + '#t=' + (sess.token || sessionStorage.getItem('opa_token'));
+    html += '<a class="mod ' + m.cls + '" href="' + destUrl + '">' +
+      '<div class="bar"></div>' +
+      '<div class="glow"></div>' +
+      '<div class="body">' +
+        '<div class="ico">' + m.icon + '</div>' +
+        '<div class="name">' + m.name + '</div>' +
+        '<div class="desc">' + m.desc + '</div>' +
+        (sess.puedeEscribir ? '' : '<div style="font-size:10px;color:rgba(255,255,255,.4);margin-top:6px;font-weight:600;">👁 Solo lectura</div>') +
+      '</div>' +
+      '<span class="arrow">→</span>' +
+    '</a>';
+  });
+  grid.innerHTML = html;
+}
+
+function showErr(msg) {
+  var el = document.getElementById('login-err');
+  el.textContent = msg; el.classList.add('on');
+}
+function setBusy(v) {
+  document.getElementById('btn-login').disabled = v;
+  document.getElementById('btn-txt').style.display   = v ? 'none' : '';
+  document.getElementById('spinner').classList.toggle('on', v);
+  if (!v) document.getElementById('login-err').classList.remove('on');
+}
+function togglePass() {
+  var inp = document.getElementById('inp-pass');
+  inp.type = inp.type === 'password' ? 'text' : 'password';
+}
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function() {
+    navigator.serviceWorker.register('./sw.js').catch(function(e){ console.warn('SW error:', e); });
   });
 }
 </script>
