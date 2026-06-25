@@ -66,6 +66,7 @@ function doGet(e) {
     var p      = (e && e.parameter) || {};
     var action = p.action || '';
 
+    // ── ENDPOINTS PÚBLICOS (sin token) ──────────────────────────
     // Acceso directo sin parámetros → estado del sistema
     if (!action && !p.token) {
       return jsonResponse({
@@ -81,6 +82,15 @@ function doGet(e) {
     if (action === 'validateSession') return jsonResponse(handleValidateSession(p.token));
     if (action === 'logout')          { handleLogout(p.token); return jsonResponse({ ok: true }); }
 
+    // Lista de usuarios para el dropdown del portal (nombres sin contraseñas)
+    if (action === 'getListaUsuarios')     return jsonResponse(getListaUsuarios());
+    // Listas por módulo para asignaciones internas (nombres + roles, sin contraseñas)
+    if (action === 'getUsuarios')          return jsonResponse({ ok: true, usuarios: getUsuarios() });
+    if (action === 'getUsuariosGerencial') return jsonResponse({ ok: true, usuarios: getUsuariosGerencial() });
+    if (action === 'getUsuariosMapa')      return jsonResponse({ ok: true, usuarios: getUsuariosMapa() });
+    if (action === 'getUsuariosCostos')    return jsonResponse({ ok: true, usuarios: getUsuariosCostos() });
+
+    // ── ENDPOINTS PROTEGIDOS (requieren token) ───────────────────
     var sess = requireSession(p.token);
     if (sess.error) return jsonResponse(sess);
 
@@ -92,10 +102,6 @@ function doGet(e) {
         session: buildSessPublic(sess)
       });
     }
-    if (action === 'getUsuarios')          return jsonResponse({ usuarios: getUsuarios() });
-    if (action === 'getUsuariosGerencial') return jsonResponse({ usuarios: getUsuariosGerencial() });
-    if (action === 'getUsuariosMapa')      return jsonResponse({ usuarios: getUsuariosMapa() });
-    if (action === 'getUsuariosCostos')    return jsonResponse({ usuarios: getUsuariosCostos() });
     if (action === 'getCfg') {
       return jsonResponse({ ok: true, valor: PropertiesService.getScriptProperties().getProperty('cfg_' + p.clave) || '' });
     }
@@ -272,6 +278,40 @@ function buscarEnSheet(normUsuario, clave) {
     }
   }
   return null;
+}
+
+// Retorna lista unificada de TODOS los usuarios de TODAS las pestañas
+// para el dropdown del portal. Solo expone nombre para mostrar + clave de login.
+// NO incluye contraseñas. Endpoint público.
+function getListaUsuarios() {
+  var userSS;
+  try { userSS = getUserSS(); } catch(e) { return { ok: false, usuarios: [] }; }
+
+  var allUsers = [];
+  var seen     = {};
+  var tabs     = ['usuarios', 'cabinets', 'gerencial', 'mapa', 'costos'];
+
+  tabs.forEach(function(tab) {
+    var sh = userSS.getSheetByName(tab);
+    if (!sh) return;
+    var last = sh.getLastRow();
+    if (last < 2) return;
+    var ncols = Math.min(sh.getLastColumn(), 4);
+    var rows  = sh.getRange(2, 1, last - 1, ncols).getValues();
+    rows.forEach(function(r) {
+      if (!r[0]) return;
+      var key = normUser(r[0]);
+      if (seen[key]) return;
+      seen[key] = true;
+      // Col A = usuario (clave de login), Col D = nombre para mostrar (opcional)
+      var usuario = String(r[0]).trim().toUpperCase();
+      var nombre  = (ncols >= 4 && r[3]) ? String(r[3]).trim() : usuario;
+      allUsers.push({ usuario: usuario, nombre: nombre });
+    });
+  });
+
+  allUsers.sort(function(a, b) { return a.nombre.localeCompare(b.nombre, 'es'); });
+  return { ok: true, usuarios: allUsers };
 }
 
 function getUsuarios()          { return leerUsuariosTab('cabinets'); }

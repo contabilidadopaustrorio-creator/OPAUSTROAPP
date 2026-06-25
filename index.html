@@ -164,25 +164,33 @@ var MODULOS_INFO = {
 
 async function cargarUsuarios() {
   var sel = document.getElementById('sel-user');
+  sel.innerHTML = '<option value="">Cargando…</option>';
+  sel.disabled = true;
   try {
-    var r = await fetch(GAS_URL + '?action=getUsuarios', { redirect: 'follow' });
+    var r = await fetch(GAS_URL + '?action=getListaUsuarios', { redirect: 'follow' });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
     var d = await r.json();
-    var lista = d.usuarios || [];
-    sel.innerHTML = '<option value="">Selecciona tu usuario…</option>';
+    var lista = (d.usuarios || []);
+    if (!lista.length) throw new Error('sin_usuarios');
+    sel.innerHTML = '<option value="">— Selecciona tu usuario —</option>';
     lista.forEach(function(u) {
       var op = document.createElement('option');
-      op.value = u.usuario;
-      op.textContent = u.usuario;
+      op.value   = u.usuario;            // clave usada para el login (col A del Sheet)
+      op.textContent = u.nombre || u.usuario;  // nombre para mostrar (col D si existe)
       sel.appendChild(op);
     });
+    sel.disabled = false;
   } catch(e) {
-    sel.innerHTML = '<option value="">Escribe tu usuario manualmente</option>';
-    // Cambiar el select por un input de texto si GAS no responde
+    // Fallback: input de texto si GAS no responde o no hay usuarios cargados
     var inp = document.createElement('input');
     inp.type = 'text'; inp.id = 'sel-user'; inp.required = true;
-    inp.placeholder = 'Nombre de usuario'; inp.className = sel.className;
-    inp.style.cssText = sel.style.cssText;
+    inp.placeholder = 'Escribe tu usuario';
+    inp.className   = sel.className;
     sel.parentNode.replaceChild(inp, sel);
+    inp.focus();
+    if (e.message === 'sin_usuarios') {
+      showErr('No hay usuarios configurados. Ejecuta configurarSistema() en Apps Script.');
+    }
   }
 }
 
