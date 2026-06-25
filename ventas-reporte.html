@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta name="theme-color" content="#0a1628">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Reporte Ventas">
+<link rel="manifest" href="manifest.webmanifest">
+<title>Reporte de Ventas — Opaustro</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;}
+body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;display:flex;flex-direction:column;background:#0a1628;}
+.hdr{flex-shrink:0;background:#0a1628;color:#fff;display:flex;align-items:center;gap:14px;padding:10px 16px;border-bottom:1px solid rgba(255,255,255,.1);}
+.hdr .back{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.16);border-radius:8px;padding:7px 13px;color:#fff;font-size:12px;font-weight:600;cursor:pointer;text-decoration:none;white-space:nowrap;transition:.15s;}
+.hdr .back:hover{background:rgba(255,255,255,.18);}
+.hdr .ti{font-size:14px;font-weight:800;letter-spacing:.03em;display:flex;align-items:center;gap:8px;}
+.hdr .ti small{font-size:11px;font-weight:500;color:rgba(255,255,255,.5);letter-spacing:0;}
+.tabsr{display:flex;gap:6px;margin-left:auto;flex-wrap:wrap;}
+.rbtn{padding:6px 13px;border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.05);color:rgba(255,255,255,.7);border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;transition:.15s;}
+.rbtn:hover{color:#fff;border-color:rgba(255,255,255,.34);}
+.rbtn.active{background:#10b981;color:#fff;border-color:#10b981;}
+.frame{flex:1;position:relative;background:#f3f5f8;}
+.frame iframe{position:absolute;inset:0;width:100%;height:100%;border:0;}
+.loading{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#687386;font-size:13px;}
+@media(max-width:560px){.hdr{flex-wrap:wrap;gap:8px;}.hdr .ti small{display:none;}.tabsr{margin-left:0;width:100%;}}
+</style>
+</head>
+<body>
+<div class="hdr">
+  <a class="back" href="./ventas-hub.html">← Volver</a>
+  <div class="ti" id="repTitle">📊 Reporte <small>Power BI</small></div>
+</div>
+<div class="frame">
+  <div class="loading" id="loading">Cargando tablero…</div>
+  <iframe id="frame" title="Reporte de Ventas Power BI" allowfullscreen></iframe>
+</div>
+<script>
+// Tableros disponibles. Para agregar otro: suma aqui su nombre, titulo y URL,
+// y crea su tarjeta en ventas-hub.html con href="./ventas-reporte.html?r=NOMBRE".
+var REPORTES = {
+  ventas:    { titulo:'Ventas',          url:'https://app.powerbi.com/view?r=eyJrIjoiMWQwNGVjZTktOTRmNS00MTg1LThhMDItYTE5NjY2MDMzODU1IiwidCI6IjYzNDBhYjFkLTM0OWQtNDUyNS1iMTg1LWY4YjZiM2YzNjM1ZCIsImMiOjR9&embedImagePlaceholder=true&pageName=472891f7463692af2e2a' },
+  cartera:   { titulo:'Cartera',         url:'https://app.powerbi.com/view?r=eyJrIjoiYTZjNzkxZDUtNmRjNS00ZWFjLTk0MGYtOThmZWI5NTE0OGFiIiwidCI6IjYzNDBhYjFkLTM0OWQtNDUyNS1iMTg1LWY4YjZiM2YzNjM1ZCIsImMiOjR9&embedImagePlaceholder=true&pageName=1de62e6237edebc0b4d4' },
+  gerencial: { titulo:'Ventas Gerencial',url:'https://app.powerbi.com/view?r=eyJrIjoiZWM0YmEzOTktODg1NS00ZWM5LWE4ODktZWNiOTJiZWJiOWVlIiwidCI6IjYzNDBhYjFkLTM0OWQtNDUyNS1iMTg1LWY4YjZiM2YzNjM1ZCIsImMiOjR9&embedImagePlaceholder=true&pageName=472891f7463692af2e2a' },
+  retornos:  { titulo:'Retornos',        url:'https://app.powerbi.com/view?r=eyJrIjoiZmFjNmRjZWItYmViYi00NTY5LWI4OWYtZDkwM2I4MWVkNjI4IiwidCI6IjYzNDBhYjFkLTM0OWQtNDUyNS1iMTg1LWY4YjZiM2YzNjM1ZCIsImMiOjR9&pageName=6064212f6f8879aa3e28' }
+};
+function getParam(n){ return new URLSearchParams(location.search).get(n); }
+function cargarReporte(){
+  var key = getParam('r') || 'ventas';
+  var rep = REPORTES[key] || REPORTES.ventas;
+  var f = document.getElementById('frame');
+  var l = document.getElementById('loading');
+  var t = document.getElementById('repTitle');
+  if(t) t.innerHTML = '📊 ' + rep.titulo + ' <small>Power BI</small>';
+  document.title = rep.titulo + ' — Opaustro';
+  if(l) l.style.display='flex';
+  f.onload = function(){ if(l) l.style.display='none'; };
+  f.src = rep.url;
+}
+cargarReporte();
+if('serviceWorker' in navigator){
+  window.addEventListener('load', function(){
+    navigator.serviceWorker.register('./sw.js').catch(function(e){console.warn('SW error:',e);});
+  });
+}
+</script>
+</body>
+</html>

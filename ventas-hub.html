@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta name="theme-color" content="#0a1628">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Ventas">
+<link rel="manifest" href="manifest.webmanifest">
+<title>Ventas — Opaustro</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;min-height:100vh;background:#0a1628;display:flex;align-items:center;justify-content:center;padding:24px;position:relative;overflow:hidden;}
+body:before{content:"";position:fixed;inset:0;background:radial-gradient(ellipse at 20% 18%,rgba(4,120,87,.26) 0%,transparent 46%),radial-gradient(ellipse at 82% 82%,rgba(0,91,158,.18) 0%,transparent 44%),linear-gradient(135deg,#0a1628 0%,#0d2240 55%,#0a1628 100%);pointer-events:none;}
+body:after{content:"";position:fixed;inset:0;background-image:linear-gradient(rgba(255,255,255,.018) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.018) 1px,transparent 1px);background-size:54px 54px;pointer-events:none;}
+.back{position:fixed;top:18px;left:20px;z-index:10;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.13);border-radius:8px;padding:8px 14px;color:rgba(255,255,255,.6);font-size:12px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:.15s;text-decoration:none;}
+.back:hover{background:rgba(255,255,255,.14);color:#fff;border-color:rgba(255,255,255,.26);}
+.portal{width:100%;max-width:760px;position:relative;z-index:1;}
+.top{text-align:center;margin-bottom:42px;}
+.logo-wrap{display:inline-flex;align-items:center;justify-content:center;background:#fff;border-radius:16px;padding:14px 28px;margin-bottom:20px;box-shadow:0 16px 40px rgba(0,0,0,.45),0 0 0 1px rgba(255,255,255,.06);}
+.logo-wrap img{height:42px;width:auto;display:block;}
+.top h1{font-size:28px;font-weight:800;color:#fff;letter-spacing:.01em;}
+.top .accent{width:54px;height:3px;background:linear-gradient(90deg,#10b981,#0099ff);border-radius:3px;margin:13px auto 14px;}
+.top p{font-size:12px;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.16em;font-weight:600;}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:18px;}
+.mod{position:relative;border-radius:18px;text-align:left;transition:.22s cubic-bezier(.2,.7,.3,1);cursor:pointer;text-decoration:none;display:block;overflow:hidden;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.09);min-height:182px;}
+.mod .body{padding:26px 22px 22px;position:relative;z-index:2;height:100%;display:flex;flex-direction:column;}
+.mod .bar{height:4px;width:100%;}
+.mod:hover{transform:translateY(-6px);border-color:rgba(255,255,255,.22);box-shadow:0 22px 48px rgba(0,0,0,.45);}
+.mod:hover .glow{opacity:.9;}
+.glow{position:absolute;top:-40%;right:-30%;width:200px;height:200px;border-radius:50%;filter:blur(46px);opacity:.5;transition:.22s;z-index:1;}
+.ico{width:54px;height:54px;border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:28px;margin-bottom:auto;box-shadow:0 8px 20px rgba(0,0,0,.3);}
+.name{font-size:17px;font-weight:800;color:#fff;letter-spacing:.05em;margin-top:18px;}
+.desc{font-size:11px;color:rgba(255,255,255,.6);margin-top:5px;line-height:1.5;}
+.arrow{position:absolute;bottom:20px;right:20px;font-size:15px;color:rgba(255,255,255,.45);transition:.2s;z-index:2;}
+.mod:hover .arrow{color:#fff;transform:translateX(3px);}
+.m-mapa .bar{background:linear-gradient(90deg,#047857,#10b981);}.m-mapa .ico{background:linear-gradient(135deg,#047857,#059669);}.m-mapa .glow{background:#059669;}
+.m-vta .bar{background:linear-gradient(90deg,#005B9E,#0099ff);}.m-vta .ico{background:linear-gradient(135deg,#005B9E,#0077cc);}.m-vta .glow{background:#0077cc;}
+.m-car .bar{background:linear-gradient(90deg,#7c3aed,#a855f7);}.m-car .ico{background:linear-gradient(135deg,#7c3aed,#9d4edd);}.m-car .glow{background:#9d4edd;}
+.m-ger .bar{background:linear-gradient(90deg,#0e7490,#22d3ee);}.m-ger .ico{background:linear-gradient(135deg,#0e7490,#0891b2);}.m-ger .glow{background:#0891b2;}
+.m-ret .bar{background:linear-gradient(90deg,#b45309,#f59e0b);}.m-ret .ico{background:linear-gradient(135deg,#b45309,#d97706);}.m-ret .glow{background:#d97706;}
+.footer{text-align:center;margin-top:34px;font-size:11px;color:rgba(255,255,255,.28);letter-spacing:.04em;}
+@media(max-width:540px){.top h1{font-size:22px;}.grid{grid-template-columns:1fr;gap:14px;}.mod{min-height:150px;}}
+</style>
+</head>
+<body>
+<a class="back" href="./index.html">← Portal Opaustro</a>
+<div class="portal">
+  <div class="top">
+    <div class="logo-wrap"><img src="./logo_opaustro.png" alt="Opaustro" onerror="this.parentNode.style.display='none'"></div>
+    <h1>Ventas</h1>
+    <div class="accent"></div>
+    <p>Selecciona el módulo al que deseas acceder</p>
+  </div>
+  <div class="grid">
+    <a class="mod m-mapa" href="./ventas.html">
+      <div class="bar"></div>
+      <div class="glow"></div>
+      <div class="body">
+        <div class="ico">🗺️</div>
+        <div class="name">MAPA TERRITORIAL</div>
+        <div class="desc">Clientes · Zonas · Crecimiento</div>
+        <span class="arrow">→</span>
+      </div>
+    </a>
+    <a class="mod m-vta" href="./ventas-reporte.html?r=ventas">
+      <div class="bar"></div>
+      <div class="glow"></div>
+      <div class="body">
+        <div class="ico">📊</div>
+        <div class="name">VENTAS</div>
+        <div class="desc">Tablero Power BI</div>
+        <span class="arrow">→</span>
+      </div>
+    </a>
+    <a class="mod m-car" href="./ventas-reporte.html?r=cartera">
+      <div class="bar"></div>
+      <div class="glow"></div>
+      <div class="body">
+        <div class="ico">💳</div>
+        <div class="name">CARTERA</div>
+        <div class="desc">Tablero Power BI</div>
+        <span class="arrow">→</span>
+      </div>
+    </a>
+    <a class="mod m-ger" href="./ventas-reporte.html?r=gerencial">
+      <div class="bar"></div>
+      <div class="glow"></div>
+      <div class="body">
+        <div class="ico">📈</div>
+        <div class="name">VENTAS GERENCIAL</div>
+        <div class="desc">Tablero Power BI</div>
+        <span class="arrow">→</span>
+      </div>
+    </a>
+    <a class="mod m-ret" href="./ventas-reporte.html?r=retornos">
+      <div class="bar"></div>
+      <div class="glow"></div>
+      <div class="body">
+        <div class="ico">🔄</div>
+        <div class="name">RETORNOS</div>
+        <div class="desc">Tablero Power BI</div>
+        <span class="arrow">→</span>
+      </div>
+    </a>
+  </div>
+  <div class="footer">Opaustro Cía. Ltda. · Módulo Ventas</div>
+</div>
+<script>
+if('serviceWorker' in navigator){
+  window.addEventListener('load', function(){
+    navigator.serviceWorker.register('./sw.js').catch(function(e){console.warn('SW error:',e);});
+  });
+}
+</script>
+</body>
+</html>

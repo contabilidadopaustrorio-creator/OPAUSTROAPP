@@ -1,0 +1,2528 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta name="theme-color" content="#0B3C49">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Gerencial">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="manifest.webmanifest">
+<title>Tablero Gerencial – Opaustro Cía. Ltda.</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+  :root {
+    --navy:   #0B3C49;
+    --teal:   #1A7A8A;
+    --teal2:  #2BAFCA;
+    --sky:    #E3F5F8;
+    --white:  #FFFFFF;
+    --gray1:  #F4F7F9;
+    --gray2:  #E2E8EC;
+    --gray3:  #9AADB5;
+    --text:   #1C2E35;
+    --green:  #1DB87A;
+    --red:    #E05252;
+    --amber:  #F0A500;
+    --font:   'Segoe UI', system-ui, sans-serif;
+    --radius: 10px;
+    --shadow: 0 2px 12px rgba(11,60,73,.10);
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: var(--font);
+    background: var(--gray1);
+    color: var(--text);
+    font-size: 14px;
+    min-height: 100vh;
+  }
+
+  /* ── HEADER ── */
+  header {
+    background: var(--white);
+    border-bottom: 3px solid var(--teal);
+    padding: 0 32px;
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    min-height: 76px;
+    position: sticky; top: 0; z-index: 100;
+    box-shadow: 0 2px 8px rgba(11,60,73,.12);
+  }
+  header img { height: 48px; }
+  header h1 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--navy);
+    letter-spacing: .02em;
+    flex: 1;
+    text-align: center;
+  }
+  #btn-actualizar {
+    background: var(--teal);
+    color: var(--white);
+    border: none;
+    padding: 8px 18px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex; align-items: center; gap: 6px;
+    transition: background .2s;
+    white-space: nowrap;
+  }
+  #btn-actualizar:hover { background: var(--navy); }
+
+  /* ── FILTROS ── */
+  #filtros {
+    background: var(--white);
+    padding: 14px 32px;
+    display: flex;
+    align-items: flex-end;
+    gap: 16px;
+    border-bottom: 1px solid var(--gray2);
+    flex-wrap: wrap;
+  }
+  .filtro-group { display: flex; flex-direction: column; gap: 4px; }
+  .filtro-group label { font-size: 11px; font-weight: 600; color: var(--gray3); text-transform: uppercase; letter-spacing:.06em; }
+  .filtro-group select {
+    border: 1.5px solid var(--gray2);
+    border-radius: 7px;
+    padding: 7px 28px 7px 10px;
+    font-size: 13px;
+    background: var(--white);
+    color: var(--text);
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%239AADB5' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    cursor: pointer;
+    min-width: 150px;
+  }
+  .filtro-group select:focus { outline: none; border-color: var(--teal); }
+  #btn-limpiar {
+    background: transparent;
+    border: 1.5px solid var(--gray2);
+    border-radius: 7px;
+    padding: 7px 14px;
+    font-size: 13px;
+    color: var(--gray3);
+    cursor: pointer;
+    font-weight: 600;
+    align-self: flex-end;
+    transition: all .2s;
+  }
+  #btn-limpiar:hover { border-color: var(--teal); color: var(--teal); }
+
+  /* ── ESTADO CARGA ── */
+  #estado-carga {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--gray3);
+    font-size: 15px;
+  }
+
+  /* ── TABS ── */
+  #tabs-bar {
+    background: var(--white);
+    padding: 0 24px;
+    display: flex;
+    gap: 2px;
+    overflow-x: auto;
+    border-bottom: 2px solid var(--gray2);
+  }
+  .tab-btn {
+    padding: 12px 16px;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--gray3);
+    cursor: pointer;
+    border: none;
+    background: none;
+    border-bottom: 3px solid transparent;
+    margin-bottom: -2px;
+    white-space: nowrap;
+    transition: color .15s, border-color .15s;
+  }
+  .tab-btn:hover { color: var(--teal); }
+  .tab-btn.active { color: var(--navy); border-bottom-color: var(--teal); }
+
+  /* ── MAIN CONTENT ── */
+  #content { padding: 24px 28px; }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  /* ── KPI CARDS ── */
+  .kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+    gap: 14px;
+    margin-bottom: 24px;
+  }
+  .kpi-card {
+    background: var(--white);
+    border-radius: var(--radius);
+    padding: 16px 18px;
+    box-shadow: var(--shadow);
+    border-top: 3px solid var(--teal);
+  }
+  .kpi-label { font-size: 11px; font-weight: 700; color: var(--gray3); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 6px; }
+  .kpi-value { font-size: 1.45rem; font-weight: 800; color: var(--navy); }
+  .kpi-card.green { border-top-color: var(--green); }
+  .kpi-card.amber { border-top-color: var(--amber); }
+  .kpi-card.red   { border-top-color: var(--red); }
+
+  /* ── SECTION TITLE ── */
+  .section-title {
+    font-size: 1rem;
+    font-weight: 800;
+    color: var(--navy);
+    margin-bottom: 16px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .divider { border: none; border-top: 1px solid var(--gray2); margin: 20px 0; }
+
+  /* ── TABLE ── */
+  .table-wrap {
+    background: var(--white);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    overflow: auto;
+    max-height: 520px;
+  }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  thead th {
+    background: var(--navy);
+    color: var(--white);
+    padding: 10px 14px;
+    text-align: right;
+    font-weight: 700;
+    font-size: 12px;
+    position: sticky; top: 0; z-index: 2;
+    white-space: nowrap;
+  }
+  thead th:first-child { text-align: left; }
+  tbody tr { transition: background .12s; }
+  tbody tr:hover { background: var(--sky); }
+  tbody td { padding: 9px 14px; border-bottom: 1px solid var(--gray2); text-align: right; }
+  tbody td:first-child { text-align: left; font-weight: 600; }
+  .row-pct  { background: #f0fafe; color: var(--teal); font-style: italic; }
+  .row-calc { background: var(--gray1); }
+  .row-final { background: #e7f9ef; font-weight: 700; }
+  .row-total td { font-weight: 700; background: var(--sky); }
+  tfoot td { padding: 10px 14px; font-weight: 800; background: var(--navy); color: var(--white); text-align: right; }
+  tfoot td:first-child { text-align: left; }
+
+  /* ── CHARTS ── */
+  .chart-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-top: 20px; }
+  .chart-box {
+    background: var(--white);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 18px;
+  }
+  .chart-box h3 { font-size: 13px; font-weight: 700; color: var(--navy); margin-bottom: 14px; }
+  .chart-box canvas { max-height: 260px; }
+  @media(max-width: 700px) { .chart-grid { grid-template-columns: 1fr; } }
+
+  /* ── LOADING ── */
+  #loading {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(255,255,255,.8);
+    z-index: 999;
+    justify-content: center; align-items: center; flex-direction: column; gap: 16px;
+  }
+  #loading.show { display: flex; }
+  .spinner {
+    width: 42px; height: 42px;
+    border: 4px solid var(--gray2);
+    border-top-color: var(--teal);
+    border-radius: 50%;
+    animation: spin .7s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── TWO COL ── */
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-top: 18px; }
+  @media(max-width: 700px) { .two-col { grid-template-columns: 1fr; } }
+
+  /* ── BADGE ── */
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 99px; font-size: 11px; font-weight: 700; }
+  .badge-green { background: #d4f7e7; color: #0f7a4d; }
+  .badge-red   { background: #fde8e8; color: #b83434; }
+
+  /* ── TABLAS DINÁMICAS ── */
+  thead th.sortable { cursor: pointer; user-select: none; }
+  thead th.sortable:hover { background: #1A7A8A; }
+  thead th.sortable::after { content: ' ⇅'; opacity:.5; font-size:10px; }
+  thead th.sort-asc::after  { content: ' ▲'; opacity:1; }
+  thead th.sort-desc::after { content: ' ▼'; opacity:1; }
+
+  /* ── FILA EXPANDIBLE ── */
+  tr.row-expandable { cursor: pointer; }
+  tr.row-expandable:hover td:first-child { color: var(--teal); text-decoration: underline; }
+  tr.row-expandable td:first-child::before { content: '▶ '; font-size:10px; opacity:.6; }
+  tr.row-expandable.open td:first-child::before { content: '▼ '; }
+  tr.row-detail { background: #f8fdff !important; }
+  tr.row-detail td { padding: 6px 14px 6px 32px; font-size: 12px; border-bottom: 1px dashed var(--gray2); }
+  tr.row-detail td:first-child { color: var(--gray3); font-weight: 500; }
+
+  /* ── FILA CLICKEABLE NCS ── */
+  tr.row-clickable { cursor: pointer; }
+  tr.row-clickable:hover { background: var(--sky) !important; }
+  tr.row-clickable td:first-child { color: var(--teal); font-weight:700; }
+
+  /* ── FILTRO ACTIVO BADGE ── */
+  .filtro-activo {
+    display:inline-flex; align-items:center; gap:6px;
+    background: var(--sky); border: 1px solid var(--teal2);
+    border-radius: 99px; padding: 4px 12px;
+    font-size: 12px; font-weight: 700; color: var(--teal);
+    margin-bottom: 12px; cursor: pointer;
+  }
+  .filtro-activo span { color: var(--gray3); font-weight:400; }
+
+  /* ── GAUGE CARDS ── */
+  .kpi-gauge-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+  .kpi-gauge-card {
+    background: var(--white);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 18px 16px 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+  }
+  .kpi-gauge-card .gauge-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--gray3);
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    text-align: center;
+  }
+  .kpi-gauge-card .gauge-value {
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: var(--navy);
+    text-align: center;
+  }
+  .kpi-gauge-card .gauge-sub {
+    font-size: 11px;
+    color: var(--gray3);
+    text-align: center;
+  }
+  .kpi-big-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 14px;
+    margin-bottom: 20px;
+  }
+  .kpi-big-card {
+    background: var(--white);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 20px 18px;
+    border-left: 4px solid var(--teal);
+  }
+  .kpi-big-card.green { border-left-color: var(--green); }
+  .kpi-big-card.red   { border-left-color: var(--red); }
+  .kpi-big-card.amber { border-left-color: var(--amber); }
+  .kpi-big-card .kb-label { font-size: 11px; font-weight: 700; color: var(--gray3); text-transform: uppercase; letter-spacing:.06em; margin-bottom: 6px; }
+  .kpi-big-card .kb-value { font-size: 1.2rem; font-weight: 800; color: var(--navy); word-break: break-all; }
+
+  /* ── KPI CONSOLIDADO ── */
+  .kpi-consolidado-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+  .kpi-con-card {
+    background: var(--white);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 18px 20px;
+    border-top: 4px solid var(--teal);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .kpi-con-card.green { border-top-color: var(--green); }
+  .kpi-con-card.red   { border-top-color: var(--red); }
+  .kpi-con-card.amber { border-top-color: var(--amber); }
+  .kpi-con-title {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--gray3);
+    text-transform: uppercase;
+    letter-spacing: .06em;
+  }
+  .kpi-con-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 4px 0;
+    border-bottom: 1px solid var(--gray2);
+  }
+  .kpi-con-row:last-child { border-bottom: none; }
+  .kpi-con-row-label { font-size: 13px; color: var(--gray3); }
+  .kpi-con-row-val { font-size: 15px; font-weight: 800; color: var(--navy); }
+  .kpi-con-row-val.green { color: var(--green); }
+  .kpi-con-row-val.red   { color: var(--red); }
+  .kpi-con-row-val.amber { color: var(--amber); }
+  .kpi-con-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    font-weight: 700;
+    padding: 6px 10px;
+    border-radius: 8px;
+  }
+  .kpi-con-status.ok  { background: #d4f7e7; color: #0f7a4d; }
+  .kpi-con-status.bad { background: #fde8e8; color: #b83434; }
+
+  /* ── KPI CLICKEABLE ── */
+  .kpi-card.clickable { cursor: pointer; transition: transform .15s, box-shadow .15s; }
+  .kpi-card.clickable:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(11,60,73,.18); }
+  .kpi-card.clickable.active { border-top-width: 4px; box-shadow: 0 4px 16px rgba(11,60,73,.2); opacity: 1; }
+  .kpi-card.clickable.inactive { opacity: .55; }
+  /* big cards no clickeables — sin efectos */
+  .kpi-big-card { cursor: default !important; opacity: 1 !important; transform: none !important; }
+  /* LOGIN GERENCIAL */
+  .tg-login-bg{position:fixed;inset:0;background:linear-gradient(135deg,#060e1a 0%,#081624 50%,#060e1a 100%);z-index:2000;display:flex;align-items:center;justify-content:center;padding:20px;overflow:hidden;}
+  .tg-login-bg:before{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at 22% 22%,rgba(11,60,73,.35) 0%,transparent 44%),radial-gradient(ellipse at 80% 78%,rgba(43,175,202,.18) 0%,transparent 38%);pointer-events:none;}
+  .tg-login-bg:after{content:"";position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.02) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.02) 1px,transparent 1px);background-size:48px 48px;pointer-events:none;}
+  .tg-login-portal-back{position:absolute;top:18px;left:20px;z-index:20;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.13);border-radius:8px;padding:8px 14px;color:rgba(255,255,255,.6);font-size:12px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:.15s;text-decoration:none;font-family:inherit;}
+  .tg-login-portal-back:hover{background:rgba(255,255,255,.14);color:#fff;border-color:rgba(255,255,255,.26);}
+  .tg-login-card{position:relative;width:100%;max-width:400px;background:#fff;border-radius:18px;box-shadow:0 0 0 1px rgba(255,255,255,.07),0 40px 90px rgba(0,0,0,.55),0 0 80px rgba(11,60,73,.15);padding:38px 34px;z-index:1;}
+  .tg-login-top{text-align:center;margin-bottom:28px;}
+  .tg-login-logo{display:block;height:48px;width:auto;margin:0 auto 14px;}
+  .tg-login-title{font-size:21px;font-weight:900;color:#0B3C49;margin-bottom:4px;}
+  .tg-login-sub{font-size:12px;color:#687386;}
+  .tg-fg{display:flex;flex-direction:column;gap:5px;margin-bottom:14px;}
+  .tg-fg label{font-size:11px;font-weight:750;color:#687386;text-transform:uppercase;letter-spacing:.04em;}
+  .tg-fg select,.tg-fg input{width:100%;border:1.5px solid #e2e8f0;border-radius:8px;padding:11px 12px;font-size:14px;outline:none;background:#f8fafc;color:#1C2E35;transition:.15s;}
+  .tg-fg select:focus,.tg-fg input:focus{border-color:#0B3C49;box-shadow:0 0 0 3px rgba(11,60,73,.12);background:#fff;}
+  .tg-btn{width:100%;border:0;border-radius:8px;background:linear-gradient(135deg,#0B3C49 0%,#1A7A8A 100%);color:#fff;font-weight:850;font-size:14px;padding:12px 14px;cursor:pointer;margin-top:6px;box-shadow:0 8px 22px rgba(11,60,73,.32);transition:.15s;}
+  .tg-btn:hover{transform:translateY(-1px);box-shadow:0 12px 28px rgba(11,60,73,.42);}
+  .tg-err{display:none;font-size:12px;color:#A32D2D;background:#FCEBEB;border:1px solid #f3b6b6;border-radius:7px;padding:8px 10px;margin-top:12px;}
+  .tg-err.on{display:block;}
+  .tg-login-brand{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:18px;padding-top:16px;border-top:1px solid #f0f4f8;}
+  .tg-login-brand span{font-size:10px;font-weight:700;color:#b0bec5;text-transform:uppercase;letter-spacing:.08em;}
+  @media(max-width:500px){.tg-login-card{padding:28px 20px;border-radius:14px;}.tg-login-portal-back{top:14px;left:14px;}}
+  /* SELECTOR GERENCIAL */
+  .tg-sel-bg{position:fixed;inset:0;background:linear-gradient(135deg,#060e1a 0%,#081624 50%,#060e1a 100%);z-index:3000;display:flex;align-items:center;justify-content:center;padding:20px;overflow:hidden;}
+  .tg-sel-bg:before{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at 22% 22%,rgba(11,60,73,.35) 0%,transparent 44%),radial-gradient(ellipse at 80% 78%,rgba(43,175,202,.18) 0%,transparent 38%);pointer-events:none;}
+  .tg-sel-bg:after{content:"";position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.02) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.02) 1px,transparent 1px);background-size:48px 48px;pointer-events:none;}
+  .tg-sel-wrap{position:relative;width:100%;max-width:980px;z-index:1;}
+  .tg-sel-head{text-align:center;margin-bottom:36px;}
+  .tg-sel-head img{height:46px;width:auto;display:block;margin:0 auto 14px;}
+  .tg-sel-head h2{font-size:22px;font-weight:900;color:#fff;letter-spacing:.02em;}
+  .tg-sel-head p{font-size:12px;color:rgba(255,255,255,.45);margin-top:5px;}
+  .tg-sel-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;}
+  .tg-sel-card{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:26px 20px;text-align:center;cursor:pointer;transition:.18s;color:#fff;text-decoration:none;display:block;}
+  .tg-sel-card:hover{transform:translateY(-3px);border-color:rgba(255,255,255,.25);background:rgba(255,255,255,.09);}
+  .tg-sel-card.tg-c1{background:linear-gradient(135deg,rgba(11,60,73,.6),rgba(26,122,138,.5));border-color:rgba(43,175,202,.3);box-shadow:0 8px 28px rgba(11,60,73,.4);}
+  .tg-sel-card.tg-c1:hover{box-shadow:0 14px 38px rgba(11,60,73,.55);}
+  .tg-sel-card.tg-c2{background:linear-gradient(135deg,rgba(79,39,120,.5),rgba(124,58,237,.4));border-color:rgba(124,58,237,.3);box-shadow:0 8px 28px rgba(79,39,120,.4);}
+  .tg-sel-card.tg-c2:hover{box-shadow:0 14px 38px rgba(79,39,120,.55);}
+  .tg-sel-card.tg-c3{background:linear-gradient(135deg,rgba(3,105,161,.58),rgba(6,182,212,.42));border-color:rgba(34,211,238,.32);box-shadow:0 8px 28px rgba(3,105,161,.4);}
+  .tg-sel-card.tg-c3:hover{box-shadow:0 14px 38px rgba(3,105,161,.55);}
+  .tg-sel-card .tsc-ico{font-size:34px;margin-bottom:10px;}
+  .tg-sel-card .tsc-name{font-size:15px;font-weight:800;letter-spacing:.03em;}
+  .tg-sel-card .tsc-desc{font-size:11px;color:rgba(255,255,255,.6);margin-top:5px;}
+  .tg-sel-footer{text-align:center;margin-top:26px;font-size:10px;color:rgba(255,255,255,.22);}
+  @media(max-width:760px){.tg-sel-bg{overflow:auto}.tg-sel-wrap{max-width:420px}.tg-sel-grid{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+
+<!-- SELECTOR GERENCIAL -->
+<div class="tg-sel-bg" id="tg-sel-bg">
+  <a class="tg-login-portal-back" href="./index.html">← Portal Opaustro</a>
+  <div class="tg-sel-wrap">
+    <div class="tg-sel-head">
+      <img src="logo.png" alt="Opaustro" onerror="this.style.display='none'">
+      <h2>Gerencia</h2>
+      <p>Selecciona el módulo al que deseas acceder</p>
+    </div>
+    <div class="tg-sel-grid">
+      <div class="tg-sel-card tg-c1" onclick="tgIrALogin()">
+        <div class="tsc-ico">📊</div>
+        <div class="tsc-name">Tablero de Control</div>
+        <div class="tsc-desc">Indicadores · Análisis · KPIs</div>
+      </div>
+      <a class="tg-sel-card tg-c2" href="./revision.html">
+        <div class="tsc-ico">💹</div>
+        <div class="tsc-name">Revisión de Costos</div>
+        <div class="tsc-desc">Márgenes · Inventario · Costos</div>
+      </a>
+      <a class="tg-sel-card tg-c3" href="./flujo-caja-opaustro.html">
+        <div class="tsc-ico">💵</div>
+        <div class="tsc-name">Flujo de Caja</div>
+        <div class="tsc-desc">Ingresos · Gastos · Proyección</div>
+      </a>
+    </div>
+    <div class="tg-sel-footer">Opaustro Cía. Ltda. · Módulo Gerencial</div>
+  </div>
+</div>
+
+<!-- LOGIN GERENCIAL -->
+<div class="tg-login-bg" id="tg-login-bg">
+  <button type="button" class="tg-login-portal-back" onclick="tgVolverSelector()">← Volver</button>
+  <form class="tg-login-card" onsubmit="return tgDoLogin(event)">
+    <div class="tg-login-top">
+      <img class="tg-login-logo" src="logo.png" alt="Opaustro" onerror="this.style.display='none'">
+      <div class="tg-login-title">Tablero Gerencial</div>
+      <div class="tg-login-sub">Opaustro Cía. Ltda. · Acceso restringido</div>
+    </div>
+    <div class="tg-fg">
+      <label>Usuario</label>
+      <select id="tg-user" required>
+        <option value="">Seleccionar usuario...</option>
+        <option value="BENJAMIN PICON">BENJAMIN PICON</option>
+        <option value="FERNANDO CANTOS">FERNANDO CANTOS</option>
+        <option value="PATRICIO POSSO">PATRICIO POSSO</option>
+        <option value="LOURDES MENDEZ">LOURDES MENDEZ</option>
+      </select>
+    </div>
+    <div class="tg-fg">
+      <label>Contraseña</label>
+      <input type="password" id="tg-pass" required placeholder="••••••">
+    </div>
+    <button class="tg-btn" type="submit">Ingresar</button>
+    <div class="tg-err" id="tg-err">Usuario o contraseña incorrectos.</div>
+    <div class="tg-login-brand"><span>Tablero Gerencial · Opaustro</span></div>
+  </form>
+</div>
+
+<div id="loading"><div class="spinner"></div><span style="color:var(--navy);font-weight:700">Procesando datos…</span></div>
+
+<!-- HEADER -->
+<header>
+  <img src="logo.png" alt="Opaustro" onerror="this.style.display='none'"/>
+  <h1>TABLERO GERENCIAL EMPRESA OPAUSTRO CÍA. LTDA.</h1>
+  <button id="btn-actualizar" onclick="cargarDesdeServidor()">🔄 Actualizar datos</button>
+  <button onclick="tgLogout()" style="background:transparent;border:1px solid #ddd;color:#687386;padding:8px 14px;border-radius:8px;font-size:13px;cursor:pointer;">Salir</button>
+</header>
+
+<!-- FILTROS -->
+<div id="filtros">
+  <div class="filtro-group">
+    <label>Año</label>
+    <select id="sel-año" onchange="aplicarFiltros()"><option value="">Seleccionar…</option></select>
+  </div>
+  <div class="filtro-group">
+    <label>Mes</label>
+    <select id="sel-mes" onchange="aplicarFiltros()"><option value="TODOS">TODOS</option></select>
+  </div>
+  <div class="filtro-group">
+    <label>Línea</label>
+    <select id="sel-linea" onchange="aplicarFiltros()"><option value="TODAS">TODAS</option></select>
+  </div>
+  <button id="btn-limpiar" onclick="limpiarFiltros()">✕ Limpiar filtros</button>
+</div>
+
+<!-- TABS -->
+<div id="tabs-bar">
+  <button class="tab-btn active" onclick="switchTab(0)">📊 Tablero Normal</button>
+  <button class="tab-btn" onclick="switchTab(1)">📊 Sin Adicionales</button>
+  <button class="tab-btn" onclick="switchTab(2)">💸 Análisis de Gastos</button>
+  <button class="tab-btn" onclick="switchTab(3)">🚚 Transporte</button>
+  <button class="tab-btn" onclick="switchTab(4)">🔄 Retornos</button>
+  <button class="tab-btn" onclick="switchTab(5)">💳 Descuentos</button>
+  <button class="tab-btn" onclick="switchTab(6)">📌 NCS Pendientes</button>
+  <button class="tab-btn" onclick="switchTab(7)">💰 NCS Financieras</button>
+  <button class="tab-btn" onclick="switchTab(8)">👥 Talento Humano</button>
+  <button class="tab-btn" onclick="switchTab(9)">💎 Rebate</button>
+
+</div>
+
+<!-- CONTENT -->
+<div id="content">
+
+  <!-- ESTADO CARGA -->
+  <div id="estado-carga">⏳ Cargando datos…</div>
+
+  <!-- TAB 0: TABLERO NORMAL -->
+  <div class="tab-panel" id="panel-0">
+    <div class="section-title">📊 Indicadores Clave</div>
+    <div id="kpi-normal-big" class="kpi-big-grid"></div>
+    <div id="kpi-normal-gauges" class="kpi-gauge-grid"></div>
+    <hr class="divider"/>
+    <div class="table-wrap"><table id="tbl-normal"><thead></thead><tbody></tbody></table></div>
+  </div>
+
+  <!-- TAB 1: SIN ADICIONALES -->
+  <div class="tab-panel" id="panel-1">
+    <div class="section-title">📊 Indicadores Clave — Sin Adicionales</div>
+    <div id="kpi-sin-big" class="kpi-big-grid"></div>
+    <div id="kpi-sin-gauges" class="kpi-gauge-grid"></div>
+    <hr class="divider"/>
+    <div class="table-wrap"><table id="tbl-sin"><thead></thead><tbody></tbody></table></div>
+  </div>
+
+  <!-- TAB 2: GASTOS -->
+  <div class="tab-panel" id="panel-2">
+    <div class="section-title">💸 Análisis de Gastos</div>
+    <div class="kpi-grid" id="kpi-gastos"></div>
+    <hr class="divider"/>
+    <div class="two-col">
+      <div>
+        <div class="table-wrap"><table id="tbl-gastos"><thead></thead><tbody></tbody></table></div>
+        <div id="detalle-rubro-wrap" style="margin-top:12px;display:none">
+          <div id="badge-rubro-activo" class="filtro-activo" onclick="cerrarDetalleRubro()">
+            <span>Rubro:</span> <span id="badge-rubro-nombre"></span> &nbsp;✕
+          </div>
+          <div class="table-wrap"><table id="tbl-gastos-det"><thead></thead><tbody></tbody></table></div>
+        </div>
+      </div>
+      <div class="chart-box"><h3>Top 10 Rubros</h3><canvas id="chart-gastos"></canvas></div>
+    </div>
+    <hr class="divider"/>
+    <div class="section-title">👤 Distribución por Accionistas</div>
+    <div class="table-wrap"><table id="tbl-accionistas"><thead></thead><tbody></tbody></table></div>
+  </div>
+
+  <!-- TAB 3: TRANSPORTE -->
+  <div class="tab-panel" id="panel-3">
+    <div class="section-title">🚚 Detalle de Transporte</div>
+    <div class="filtro-group" style="margin-bottom:16px">
+      <label>Ruta</label>
+      <select id="sel-ruta" onchange="renderTransporte()"><option value="TODAS">TODAS</option></select>
+    </div>
+    <div class="kpi-grid" id="kpi-transporte"></div>
+    <hr class="divider"/>
+    <div class="table-wrap"><table id="tbl-transporte"><thead></thead><tbody></tbody></table></div>
+    <div class="chart-grid">
+      <div class="chart-box"><h3>Días Trabajados por Mes</h3><canvas id="chart-trans-dias"></canvas></div>
+      <div class="chart-box"><h3>Total Pagado por Mes</h3><canvas id="chart-trans-pago"></canvas></div>
+      <div class="chart-box"><h3>Costo por Línea</h3><canvas id="chart-trans-linea"></canvas></div>
+      <div class="chart-box"><h3>Facturas por Línea</h3><canvas id="chart-trans-fact"></canvas></div>
+    </div>
+  </div>
+
+  <!-- TAB 4: RETORNOS -->
+  <div class="tab-panel" id="panel-4">
+    <div class="section-title">🔄 Detalle de Retornos</div>
+    <div class="filtro-group" style="margin-bottom:16px">
+      <label>Canal</label>
+      <select id="sel-canal" onchange="renderRetornos()"><option value="TODOS">TODOS</option></select>
+    </div>
+    <div class="kpi-grid" id="kpi-retornos"></div>
+    <hr class="divider"/>
+    <div class="chart-box" style="margin-bottom:18px"><h3>Retornos por Día</h3><canvas id="chart-retornos"></canvas></div>
+    <div class="two-col">
+      <div>
+        <div class="section-title" style="font-size:13px">Por Vendedor</div>
+        <div class="table-wrap"><table id="tbl-ret-vendedor"><thead></thead><tbody></tbody></table></div>
+        <div id="ret-vendedor-detalle" style="display:none;margin-top:10px">
+          <div id="badge-ret-vendedor" class="filtro-activo" onclick="cerrarDetalleRetVendedor()">
+            <span id="badge-ret-vendedor-txt"></span> &nbsp;✕
+          </div>
+          <div class="table-wrap"><table id="tbl-ret-clientes"><thead></thead><tbody></tbody></table></div>
+        </div>
+      </div>
+      <div>
+        <div class="section-title" style="font-size:13px">Por Motivo</div>
+        <div class="table-wrap"><table id="tbl-ret-motivo"><thead></thead><tbody></tbody></table></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 5: DESCUENTOS -->
+  <div class="tab-panel" id="panel-5">
+    <div class="section-title">💳 Detalle de Descuentos</div>
+    <div class="filtro-group" style="margin-bottom:16px">
+      <label>Tipo</label>
+      <select id="sel-tipo-desc" onchange="renderDescuentos()"><option value="TODOS">TODOS</option></select>
+    </div>
+    <div class="kpi-grid" id="kpi-descuentos"></div>
+    <hr class="divider"/>
+    <div class="chart-grid" style="margin-bottom:18px">
+      <div class="chart-box"><h3>Tendencia por Mes</h3><canvas id="chart-desc"></canvas></div>
+      <div class="chart-box"><h3>Distribución por Tipo</h3><canvas id="chart-desc-tipo"></canvas></div>
+    </div>
+    <div class="two-col">
+      <div>
+        <div class="section-title" style="font-size:13px">Por Empleado</div>
+        <div class="table-wrap"><table id="tbl-desc-emp"><thead></thead><tbody></tbody></table></div>
+        <div id="desc-emp-detalle" style="display:none;margin-top:10px">
+          <div id="badge-desc-emp" class="filtro-activo" onclick="cerrarDetalleDescEmp()">
+            <span id="badge-desc-emp-txt"></span> &nbsp;✕
+          </div>
+          <div class="table-wrap"><table id="tbl-desc-emp-det"><thead></thead><tbody></tbody></table></div>
+        </div>
+      </div>
+      <div>
+        <div class="section-title" style="font-size:13px">Por Tipo</div>
+        <div class="table-wrap"><table id="tbl-desc-obs"><thead></thead><tbody></tbody></table></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 6: NCS PENDIENTES -->
+  <div class="tab-panel" id="panel-6">
+    <div class="section-title">📌 NCS Pendientes</div>
+    <div class="kpi-grid" id="kpi-ncs"></div>
+    <hr class="divider"/>
+    <div id="badge-ncs-wrap" style="display:none">
+      <div id="badge-ncs-activo" class="filtro-activo" onclick="limpiarFiltroNCS()">
+        <span>Línea:</span> <span id="badge-ncs-nombre"></span> &nbsp;✕
+      </div>
+    </div>
+    <div class="chart-box" style="margin-bottom:18px"><h3>Pendiente por Mes</h3><canvas id="chart-ncs"></canvas></div>
+    <div class="two-col">
+      <div>
+        <div class="section-title" style="font-size:13px">Por Línea <small style="color:var(--gray3);font-weight:400">(clic para filtrar)</small></div>
+        <div class="table-wrap"><table id="tbl-ncs-linea"><thead></thead><tbody></tbody></table></div>
+      </div>
+      <div>
+        <div class="section-title" style="font-size:13px">Por Detalle</div>
+        <div class="table-wrap"><table id="tbl-ncs-det"><thead></thead><tbody></tbody></table></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 7: NCS FINANCIERAS -->
+  <div class="tab-panel" id="panel-7">
+    <div class="section-title">💰 NCS Financieras</div>
+    <div class="kpi-grid" id="kpi-fin"></div>
+    <hr class="divider"/>
+    <div id="badge-fin-wrap" style="display:none">
+      <div id="badge-fin-activo" class="filtro-activo" onclick="limpiarFiltroFin()">
+        <span>Línea:</span> <span id="badge-fin-nombre"></span> &nbsp;✕
+      </div>
+    </div>
+    <div class="chart-box" style="margin-bottom:18px"><h3>Descuentos Financieros por Mes</h3><canvas id="chart-fin"></canvas></div>
+    <div class="two-col">
+      <div>
+        <div class="section-title" style="font-size:13px">Por Línea <small style="color:var(--gray3);font-weight:400">(clic para filtrar)</small></div>
+        <div class="table-wrap"><table id="tbl-fin-linea"><thead></thead><tbody></tbody></table></div>
+      </div>
+      <div>
+        <div class="section-title" style="font-size:13px">Por Detalle</div>
+        <div class="table-wrap"><table id="tbl-fin-det"><thead></thead><tbody></tbody></table></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 8: TALENTO HUMANO -->
+  <div class="tab-panel" id="panel-8">
+    <div class="section-title">👥 Talento Humano <small style="color:var(--gray3);font-weight:400;font-size:11px" id="talento-fecha-corte"></small></div>
+
+    <!-- KPIs principales -->
+    <div class="kpi-grid" id="kpi-talento"></div>
+    <hr class="divider"/>
+
+    <!-- Rotación mensual -->
+    <div class="section-title" style="font-size:13px">📈 Rotación Mensual — clic en punto para ver detalle</div>
+    <div class="filtro-group" style="margin-bottom:14px">
+      <label>Departamento</label>
+      <select id="sel-talento-dep" onchange="renderTalento()"><option value="TODOS">TODOS</option></select>
+    </div>
+    <div class="chart-box" style="margin-bottom:8px"><canvas id="chart-talento-rot"></canvas></div>
+    <div id="talento-rot-detalle" style="display:none;margin-bottom:18px">
+      <div id="badge-talento-mes" class="filtro-activo" onclick="cerrarDetalleTalento()">
+        <span id="badge-talento-mes-txt"></span> &nbsp;✕
+      </div>
+      <div class="table-wrap"><table id="tbl-talento-detalle"><thead></thead><tbody></tbody></table></div>
+    </div>
+    <hr class="divider"/>
+
+    <!-- Memos -->
+    <div class="section-title" style="font-size:13px">📋 Memorandos y Sanciones</div>
+    <div class="filtro-group" style="margin-bottom:14px;display:flex;gap:16px;flex-wrap:wrap">
+      <div class="filtro-group">
+        <label>Departamento</label>
+        <select id="sel-memo-dep" onchange="renderMemos()"><option value="TODOS">TODOS</option></select>
+      </div>
+      <div class="filtro-group">
+        <label>Gravedad</label>
+        <select id="sel-memo-grav" onchange="renderMemos()"><option value="TODOS">TODOS</option><option>Leve</option><option>Moderada</option><option>Grave</option></select>
+      </div>
+    </div>
+    <div class="kpi-grid" id="kpi-memos"></div>
+    <div class="chart-grid" style="margin-bottom:18px;margin-top:14px">
+      <div class="chart-box"><h3>Memos por Mes</h3><canvas id="chart-memos-mes"></canvas></div>
+      <div class="chart-box"><h3>Distribución por Gravedad</h3><canvas id="chart-memos-grav"></canvas></div>
+    </div>
+    <div class="table-wrap"><table id="tbl-memos"><thead></thead><tbody></tbody></table></div>
+  </div>
+
+
+  <!-- TAB 9: REBATE -->
+  <div class="tab-panel" id="panel-9">
+    <div class="section-title">💎 Análisis de Rebate y Pronto Pago</div>
+
+    <!-- KPIs -->
+    <div class="kpi-grid" id="kpi-rebate-tab"></div>
+    <hr class="divider"/>
+
+    <!-- Filtros -->
+    <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:16px">
+      <div class="filtro-group">
+        <label>Línea</label>
+        <select id="sel-reb-linea" onchange="renderRebate()"><option value="TODAS">TODAS</option></select>
+      </div>
+      <div class="filtro-group">
+        <label>Proveedor</label>
+        <select id="sel-reb-prov" onchange="renderRebate()"><option value="TODOS">TODOS</option></select>
+      </div>
+    </div>
+
+    <!-- Gráficos fila 1 -->
+    <div class="chart-grid" style="margin-bottom:18px">
+      <div class="chart-box"><h3>Rebate Pagado vs Meta por Proveedor</h3><canvas id="chart-reb-prov"></canvas></div>
+      <div class="chart-box"><h3>Evolución Mensual</h3><canvas id="chart-reb-mes"></canvas></div>
+    </div>
+
+    <!-- Gráficos fila 2 -->
+    <div class="chart-grid" style="margin-bottom:18px">
+      <div class="chart-box"><h3>Rebate Perdido por Mes</h3><canvas id="chart-reb-perdido"></canvas></div>
+      <div class="chart-box"><h3>Distribución por Línea</h3><canvas id="chart-reb-linea"></canvas></div>
+    </div>
+
+    <hr class="divider"/>
+
+    <!-- Tabla detalle -->
+    <div class="section-title" style="font-size:13px">📋 Detalle por Proveedor <small style="color:var(--gray3);font-size:11px;font-weight:400">(clic para ver meses)</small></div>
+    <div class="table-wrap" style="margin-bottom:12px"><table id="tbl-reb-prov"><thead></thead><tbody></tbody></table></div>
+    <div id="reb-prov-detalle" style="display:none;margin-bottom:18px">
+      <div id="badge-reb-prov" class="filtro-activo" onclick="cerrarDetalleRebProv()">
+        <span id="badge-reb-prov-txt"></span> &nbsp;✕
+      </div>
+      <div class="table-wrap"><table id="tbl-reb-meses"><thead></thead><tbody></tbody></table></div>
+    </div>
+  </div>
+
+</div><!-- /content -->
+
+<script>
+// ══════════════════════════════════════════════════
+// GLOBALS
+// ══════════════════════════════════════════════════
+let WB = null;
+let sheets = {};
+let activeTab = 0;
+const ORDEN_MESES = ["ENERO","FEBRERO","MARZO","ABRIL","MAYO","JUNIO","JULIO","AGOSTO","SEPTIEMBRE","OCTUBRE","NOVIEMBRE","DICIEMBRE"];
+const charts = {};
+
+// ══════════════════════════════════════════════════
+// UTILS
+// ══════════════════════════════════════════════════
+const $ = id => document.getElementById(id);
+const fmt$ = v => v == null || isNaN(v) ? '$0.00' : `$${Number(v).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}`;
+const fmtPct = v => `${Number(v||0).toFixed(2)}%`;
+const fmtNum = v => Number(v||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+const loading = show => $('loading').classList.toggle('show', show);
+
+function sortMes(arr) {
+  return arr.sort((a,b) => ORDEN_MESES.indexOf(a.toUpperCase()) - ORDEN_MESES.indexOf(b.toUpperCase()));
+}
+
+function cleanStr(v){ return v == null ? '' : String(v).trim(); }
+function cleanNum(v){ return isNaN(parseFloat(v)) ? 0 : parseFloat(v); }
+function cleanUpper(v){ return cleanStr(v).toUpperCase(); }
+
+function excelDateToJSDate(serial) {
+  if (!serial || isNaN(serial)) return null;
+  const d = new Date(Math.round((serial - 25569)*86400*1000));
+  return d;
+}
+
+// ══════════════════════════════════════════════════
+// LECTURA ARCHIVO
+// ══════════════════════════════════════════════════
+// ══════════════════════════════════════════════════
+// CARGA AUTOMÁTICA DESDE SERVIDOR (GitHub Pages)
+// ══════════════════════════════════════════════════
+const ARCHIVO_XLSX = 'TABLERO.xlsx';
+const ARCHIVO_TALENTO = 'TALENTO HUMANO.xlsx';
+let WB_TALENTO = null;
+
+async function cargarDesdeServidor(){
+  // cargar también TALENTO_HUMANO.xlsx en paralelo
+  fetch(ARCHIVO_TALENTO + '?t=' + Date.now())
+    .then(r=>r.ok?r.arrayBuffer():null)
+    .then(buf=>{
+      if(!buf) return;
+      WB_TALENTO = XLSX.read(buf, {type:'array', cellDates:false});
+      procesarSheetsTalento();
+      poblarFiltrosTalento();
+      if(activeTab===8) renderTalento();
+    }).catch(()=>{});
+  loading(true);
+  try {
+    const resp = await fetch(ARCHIVO_XLSX + '?t=' + Date.now());
+    if(!resp.ok) throw new Error(`No se pudo cargar ${ARCHIVO_XLSX} (${resp.status})`);
+    const buffer = await resp.arrayBuffer();
+    WB = XLSX.read(buffer, {type:'array', cellDates:false});
+    procesarSheets();
+    poblarFiltros();
+    const est = $('estado-carga');
+    if(est) est.style.display = 'none';
+    switchTab(activeTab);
+  } catch(err){
+    const est = $('estado-carga');
+    if(est){ est.innerHTML = `❌ Error al cargar datos: ${err.message}<br><small>Verifica que TABLERO.xlsx esté en la misma carpeta que este HTML en el repositorio.</small>`; }
+    console.error(err);
+  } finally { loading(false); }
+}
+
+// Carga automática al abrir la página
+// ── LOGIN GERENCIAL ──
+const TG_AUTH_KEY='tg_auth_session';
+const TG_USUARIOS_URL='https://script.google.com/macros/s/AKfycbzAc1BH1wSGtbdudVQ4rwBk21DRRT_d2Ypb5xDUGXynDuAt7vTgxbICWgUcc9cYETnn/exec';
+// Usuarios y claves se cargan en vivo desde el Sheet; sin credenciales en el repo.
+var TG_USUARIOS=[];
+
+function tgNorm(v){return String(v||'').trim().toUpperCase().normalize('NFD').replace(/[̀-ͯ]/g,'');}
+
+async function tgCargarUsuarios(){
+  try{
+    var r=await fetch(TG_USUARIOS_URL+'?action=getUsuariosGerencial',{redirect:'follow'});
+    var d=await r.json();
+    if(d.usuarios&&d.usuarios.length){
+      TG_USUARIOS=d.usuarios;
+      var sel=document.getElementById('tg-user');
+      if(sel){
+        var prev=sel.value;
+        sel.innerHTML='<option value="">Seleccionar usuario...</option>';
+        d.usuarios.forEach(function(u){
+          var op=document.createElement('option');
+          op.value=u.usuario;
+          op.textContent=u.usuario;
+          sel.appendChild(op);
+        });
+        if(prev) sel.value=prev;
+      }
+    }
+  }catch(e){}
+}
+
+function tgIrALogin(){
+  document.getElementById('tg-sel-bg').style.display='none';
+  document.getElementById('tg-login-bg').style.display='flex';
+}
+function tgVolverSelector(){
+  document.getElementById('tg-login-bg').style.display='none';
+  document.getElementById('tg-sel-bg').style.display='flex';
+}
+function tgDoLogin(ev){
+  if(ev)ev.preventDefault();
+  var u=document.getElementById('tg-user').value.trim();
+  var p=document.getElementById('tg-pass').value.trim();
+  var err=document.getElementById('tg-err');
+  var found=TG_USUARIOS.find(function(x){return tgNorm(x.usuario)===tgNorm(u)&&String(x.clave)===String(p);});
+  if(found){
+    sessionStorage.setItem(TG_AUTH_KEY,'ok');
+    document.getElementById('tg-login-bg').style.display='none';
+    cargarDesdeServidor();
+    return false;
+  }
+  err.classList.add('on');
+  document.getElementById('tg-pass').value='';
+  return false;
+}
+
+function tgLogout(){
+  sessionStorage.removeItem(TG_AUTH_KEY);
+  window.location.href='./index.html';
+}
+if('serviceWorker' in navigator){
+  window.addEventListener('load', function(){
+    navigator.serviceWorker.register('./sw.js').catch(function(e){console.warn('SW error:',e);});
+  });
+}
+
+window.addEventListener('DOMContentLoaded', function(){
+  tgCargarUsuarios();
+  if(sessionStorage.getItem(TG_AUTH_KEY)==='ok'){
+    document.getElementById('tg-sel-bg').style.display='none';
+    document.getElementById('tg-login-bg').style.display='none';
+    cargarDesdeServidor();
+  } else {
+    document.getElementById('tg-login-bg').style.display='none';
+  }
+});
+
+function sheetToJSON(name){
+  if(!WB || !WB.SheetNames.includes(name)) return [];
+  return XLSX.utils.sheet_to_json(WB.Sheets[name], {defval:''});
+}
+
+function procesarSheets(){
+  // TABLERO principal
+  const raw = sheetToJSON('TABLERO');
+  sheets.tablero = raw.map(r=>({
+    AÑO: cleanNum(r['AÑO']),
+    MES: cleanUpper(r['MES']),
+    DETALLE: cleanStr(r['DETALLE']).trim(),
+    LINEA: cleanStr(r['LINEA']).trim(),
+    TOTAL: cleanNum(r['TOTAL'])
+  }));
+
+  // ADICIONALES
+  const rawA = sheetToJSON('ADICIONALES');
+  sheets.adicionales = rawA.map(r=>({
+    AÑO: cleanNum(r['AÑO']),
+    MES: cleanUpper(r['MES']),
+    DETALLE: cleanStr(r['DETALLE']).trim(),
+    LINEA: cleanStr(r['LINEA']).trim(),
+    TOTAL: cleanNum(r['TOTAL'])
+  }));
+
+  // GASTOS
+  sheets.gastos = sheetToJSON('GASTOS').map(r=>({
+    AÑO: cleanNum(r['AÑO']),
+    MES: cleanUpper(r['MES']),
+    Rubro: cleanStr(r['Rubro ']).trim() || cleanStr(r['Rubro']).trim(),
+    Detalle: cleanStr(r['Detalle']).trim(),
+    TOTAL: cleanNum(r['TOTAL']),
+    Presupuesto: cleanNum(r['Presupuesto'])
+  }));
+
+  // GASTOS JEFE
+  sheets.gastos_jefe = sheetToJSON('GASTOS JEFE').map(r=>{
+    const obj={};
+    Object.keys(r).forEach(k=>{ obj[k.trim().toUpperCase()] = r[k]; });
+    return { RUBRO: cleanStr(obj['RUBRO']), BENEFICIARIO: cleanStr(obj['BENEFICIARIO']), TOTAL: cleanNum(obj['TOTAL']) };
+  });
+
+  // TRANSPORTE
+  sheets.transporte = sheetToJSON('TRANSPORTE').map(r=>{
+    const obj={};
+    Object.keys(r).forEach(k=>{ obj[k.trim().toUpperCase()] = r[k]; });
+    return {
+      LINEA: cleanStr(obj['LINEA']),
+      MES: cleanUpper(obj['MES']),
+      RESPONSABLE: cleanStr(obj['RESPONSABLE']),
+      RUTA: cleanStr(obj['RUTA']),
+      FACTURAS: cleanNum(obj['Nº FACTURAS'] || obj['N FACTURAS'] || obj['FACTURAS'] || obj['NÃº FACTURAS'] || 0),
+      PESO: cleanNum(obj['PESO']),
+      VALOR_FLETE: cleanNum(obj['VALOR FLETE']),
+      DEVOLUCIONES: cleanNum(obj['DEVOLUCIONES']),
+      DIAS: cleanNum(obj['#DIAS']),
+      TOTAL_PAGADO: cleanNum(obj['TOTAL PAGADO']),
+      TOTAL_GUIA: cleanNum(obj['TOTAL GUIA']),
+      AÑO: cleanNum(obj['AÑO'] || obj['año'])
+    };
+  });
+
+  // POR LINEA (ventas)
+  sheets.ventas_linea = sheetToJSON('POR LINEA').map(r=>{
+    const obj={};
+    Object.keys(r).forEach(k=>{ obj[k.trim().toUpperCase()] = r[k]; });
+    return {
+      AÑO: cleanNum(obj['AÑO']),
+      MES: cleanUpper(obj['MES']),
+      BASE: cleanStr(obj['BASE']).trim(),
+      VENTA: cleanNum(String(obj['VENTA']).replace(/\$|,/g,''))
+    };
+  });
+
+  // RETORNOS
+  sheets.retornos = sheetToJSON('RETORNOS').map(r=>{
+    const obj={};
+    Object.keys(r).forEach(k=>{ obj[k.trim().toUpperCase()] = r[k]; });
+    const fecha = obj['FECHA'];
+    const js = excelDateToJSDate(fecha);
+    return {
+      LINEA: cleanStr(obj['LINEA']),
+      VENDEDOR: cleanStr(obj['VENDEDOR']),
+      MOT_DEVOLUCION: cleanStr(obj['MOT_DEVOLUCION']),
+      FECHA: js,
+      FACTURA: cleanStr(obj['FACTURA']),
+      CANAL: cleanStr(obj['CANAL']),
+      CLIENTE: cleanStr(obj['CLIENTE']),
+      IMPORTE: cleanNum(obj['IMPORTE']),
+      AÑO: cleanNum(obj['AÑO']),
+      MES: cleanUpper(obj['MES'] || (js ? ORDEN_MESES[js.getMonth()] : ''))
+    };
+  });
+
+  // DESCUENTOS PERSONAL
+  sheets.descuentos = sheetToJSON('DESCUENTOS PERSONAL').map(r=>{
+    const obj={};
+    Object.keys(r).forEach(k=>{ obj[k.trim().toUpperCase()] = r[k]; });
+    return {
+      AÑO: cleanNum(obj['AÑO']),
+      LINEA: cleanStr(obj['LINEA']),
+      EMPLEADO: cleanStr(obj['EMPLEADO']),
+      MES: cleanUpper(obj['MES']),
+      TOTAL: cleanNum(obj['TOTAL']),
+      OBSERVACIONES: cleanStr(obj['OBSERVACIONES'])
+    };
+  });
+
+  // NCS PENDIENTES
+  sheets.ncs = sheetToJSON('NCS PENDIENTES').map(r=>{
+    const obj={};
+    Object.keys(r).forEach(k=>{ obj[k.trim().toUpperCase()] = r[k]; });
+    return {
+      AÑO: cleanNum(obj['AÑO']),
+      MES: cleanUpper(obj['MES'] || obj['MES']),
+      LINEA: cleanStr(obj['LINEA'] || obj['LINEA']),
+      DETALLE: cleanStr(obj['DETALLE']),
+      MONTO_RECLAMAR: cleanNum(obj['MONTO RECLAMAR']),
+      MONTO_PAGADO: cleanNum(obj['MONTO PAGADO']),
+      PENDIENTE: cleanNum(obj['MONTO RECLAMAR']) - cleanNum(obj['MONTO PAGADO'])
+    };
+  });
+
+  // NCS FINANCIERAS
+  sheets.fin = sheetToJSON('NCS FINANCIERAS').map(r=>{
+    const obj={};
+    Object.keys(r).forEach(k=>{ obj[k.trim().toUpperCase()] = r[k]; });
+    return {
+      AÑO: cleanNum(obj['AÑO']),
+      MES: cleanUpper(obj['MES']),
+      LINEA: cleanStr(obj['LINEA']),
+      DETALLE: cleanStr(obj['DETALLE']),
+      TOTAL: cleanNum(obj['TOTAL'])
+    };
+  });
+
+  // REBATE — leer por posición de columna para evitar problemas de nombres
+  const wsReb = WB && WB.SheetNames.includes('REBATE') ? WB.Sheets['REBATE'] : null;
+  sheets.rebate_tab = [];
+  if(wsReb){
+    const rebRaw = XLSX.utils.sheet_to_json(wsReb, {header:1, defval:''});
+    // fila 0 = headers, fila 1+ = datos
+    const hReb = rebRaw[0] ? rebRaw[0].map(h=>String(h||'').trim()) : [];
+    const iAno=hReb.indexOf('AÑO'), iMes=hReb.indexOf('MES'), iLin=hReb.findIndex(h=>h==='Linea'||h==='LINEA');
+    const iProv=hReb.findIndex(h=>h==='Proveedor'||h==='PROVEEDOR');
+    const iDet=hReb.findIndex(h=>h==='Detalle'||h==='DETALLE');
+    const iPag=hReb.findIndex(h=>h.toUpperCase().includes('REBATE PAGADO')||h.startsWith('Rebate Pagado'));
+    const iMeta=hReb.findIndex(h=>h.toUpperCase().includes('REBATE META')||h.toUpperCase().includes('PROMEDIO')||h.toUpperCase().includes('TOTAL'));
+    const iPronto=hReb.findIndex(h=>h.toUpperCase().includes('PRONTO'));
+    for(let i=1;i<rebRaw.length;i++){
+      const row=rebRaw[i];
+      if(!row[iMes]) continue;
+      sheets.rebate_tab.push({
+        AÑO:    cleanNum(row[iAno]),
+        MES:    cleanUpper(String(row[iMes]||'')),
+        LINEA:  cleanStr(String(row[iLin]||'')),
+        PROV:   cleanStr(String(row[iProv]||'')),
+        DET:    cleanStr(String(row[iDet]||'')),
+        PAGADO: cleanNum(row[iPag]),
+        META:   cleanNum(row[iMeta]),
+        PRONTO: cleanNum(row[iPronto]),
+      });
+    }
+  }
+
+  // PE
+  sheets.pe = sheetToJSON('PE').map(r=>{
+    const obj={};
+    Object.keys(r).forEach(k=>{ obj[k.trim().toUpperCase()] = r[k]; });
+    const venta = cleanNum(obj['VENTA']), margen = cleanNum(obj['MARGEN']);
+    return {
+      AÑO: cleanNum(obj['AÑO']),
+      MES: cleanUpper(obj['MES']),
+      LINEA: cleanStr(obj['LINEA'] || obj['LINEA']),
+      PROVEEDOR: cleanStr(obj['PROVEEDOR']),
+      DETALLE: cleanStr(obj['DETALLE']),
+      VENTA: venta,
+      MARGEN: margen,
+      UTILIDAD: venta * margen
+    };
+  });
+
+  // REBATE
+  sheets.rebate = sheetToJSON('REBATE').map(r=>{
+    const obj={};
+    Object.keys(r).forEach(k=>{ obj[k.trim().toUpperCase()] = r[k]; });
+    return {
+      AÑO: cleanNum(obj['AÑO']),
+      MES: cleanUpper(obj['MES']),
+      LINEA: cleanStr(obj['LINEA'] || obj['LINEA']),
+      PROVEEDOR: cleanStr(obj['PROVEEDOR']),
+      DETALLE: cleanStr(obj['DETALLE']),
+      REBATE_PAGADO: cleanNum(obj['REBATE PAGADO']),
+      REBATE_PROMEDIO: cleanNum(obj['REBATE PROMEDIO']),
+      PRONTO_PAGO: cleanNum(obj['PRONTO PAGO'])
+    };
+  });
+}
+
+// ══════════════════════════════════════════════════
+// FILTROS
+// ══════════════════════════════════════════════════
+function poblarFiltros(){
+  const años = [...new Set(sheets.tablero.map(r=>r.AÑO))].filter(Boolean).sort();
+  const meses = [...new Set(sheets.tablero.map(r=>r.MES))].filter(Boolean);
+  const lineas = [...new Set(sheets.tablero.map(r=>r.LINEA))].filter(Boolean).sort();
+
+  const selAño = $('sel-año');
+  selAño.innerHTML = '<option value="">Seleccionar…</option>';
+  años.forEach(a=>{ selAño.innerHTML += `<option value="${a}">${a}</option>`; });
+  if(años.length){ selAño.value = años[años.length-1]; }
+
+  const selMes = $('sel-mes');
+  selMes.innerHTML = '<option value="TODOS">TODOS</option>';
+  sortMes(meses).forEach(m=>{ selMes.innerHTML += `<option value="${m}">${m}</option>`; });
+
+  const selLinea = $('sel-linea');
+  selLinea.innerHTML = '<option value="TODAS">TODAS</option>';
+  lineas.forEach(l=>{ selLinea.innerHTML += `<option value="${l}">${l}</option>`; });
+
+  // Rebate filtros
+  const rebLineas=[...new Set((sheets.rebate_tab||[]).map(r=>r.LINEA))].filter(Boolean).sort();
+  const selRebL=$('sel-reb-linea');
+  if(selRebL){ selRebL.innerHTML='<option value="TODAS">TODAS</option>'; rebLineas.forEach(l=>{ selRebL.innerHTML+=`<option>${l}</option>`; }); }
+  const rebProvs=[...new Set((sheets.rebate_tab||[]).map(r=>r.PROV))].filter(Boolean).sort();
+  const selRebP=$('sel-reb-prov');
+  if(selRebP){ selRebP.innerHTML='<option value="TODOS">TODOS</option>'; rebProvs.forEach(p=>{ selRebP.innerHTML+=`<option>${p}</option>`; }); }
+
+  // Rutas transporte
+  const rutas = [...new Set(sheets.transporte.map(r=>r.RUTA))].filter(Boolean).sort();
+  const selRuta = $('sel-ruta');
+  selRuta.innerHTML = '<option value="TODAS">TODAS</option>';
+  rutas.forEach(r=>{ selRuta.innerHTML += `<option value="${r}">${r}</option>`; });
+
+  // Canales retornos
+  const canales = [...new Set(sheets.retornos.map(r=>r.CANAL))].filter(Boolean).sort();
+  const selCanal = $('sel-canal');
+  selCanal.innerHTML = '<option value="TODOS">TODOS</option>';
+  canales.forEach(c=>{ selCanal.innerHTML += `<option value="${c}">${c}</option>`; });
+
+  // Tipos descuento
+  const tipos = [...new Set(sheets.descuentos.map(r=>r.OBSERVACIONES))].filter(Boolean).sort();
+  const selTipo = $('sel-tipo-desc');
+  selTipo.innerHTML = '<option value="TODOS">TODOS</option>';
+  tipos.forEach(t=>{ selTipo.innerHTML += `<option value="${t}">${t}</option>`; });
+
+}
+
+function getFiltros(){
+  return {
+    año: parseFloat($('sel-año').value)||null,
+    mes: $('sel-mes').value,
+    linea: $('sel-linea').value
+  };
+}
+
+function limpiarFiltros(){
+  $('sel-mes').value='TODOS';
+  $('sel-linea').value='TODAS';
+  aplicarFiltros();
+}
+
+function filtrarBase(data, {año,mes,linea}, campoLinea='LINEA'){
+  let d = data.filter(r=>r.AÑO===año);
+  if(mes!=='TODOS') d=d.filter(r=>r.MES===mes);
+  if(linea!=='TODAS') d=d.filter(r=>r[campoLinea]===linea);
+  return d;
+}
+
+function aplicarFiltros(){ switchTab(activeTab); }
+
+// ══════════════════════════════════════════════════
+// TABS
+// ══════════════════════════════════════════════════
+function switchTab(idx){
+  activeTab = idx;
+  document.querySelectorAll('.tab-btn').forEach((b,i)=>b.classList.toggle('active',i===idx));
+  document.querySelectorAll('.tab-panel').forEach((p,i)=>p.classList.toggle('active',i===idx));
+  if(!WB) return;
+  const f = getFiltros();
+  if(!f.año) return;
+  const renders = [renderNormal,renderSin,renderGastos,renderTransporte,renderRetornos,renderDescuentos,renderNCS,renderFin,renderTalento,renderRebate];
+  renders[idx](f);
+}
+
+
+// ══════════════════════════════════════════════════
+// GAUGE SVG
+// ══════════════════════════════════════════════════
+function drawGauge(containerId, value, max, label, unit='%', colorFn=null){
+  const el=$(containerId);
+  if(!el) return;
+  const pct = Math.min(Math.max(value/max,0),1);
+  const angle = pct * 180; // 0-180 grados
+  const color = colorFn ? colorFn(value) : (pct>=0.9?'#1DB87A':pct>=0.7?'#F0A500':'#E05252');
+  const r=70, cx=90, cy=85;
+  // path arco fondo
+  function polarToXY(deg){ 
+    const rad=(deg-180)*Math.PI/180;
+    return [cx+r*Math.cos(rad), cy+r*Math.sin(rad)];
+  }
+  function arcPath(startDeg, endDeg, radius, col){
+    const [x1,y1]=polarToXY(startDeg);
+    const [x2,y2]=polarToXY(endDeg);
+    const large=endDeg-startDeg>180?1:0;
+    return `<path d="M${x1},${y1} A${radius},${radius} 0 ${large},1 ${x2},${y2}" fill="none" stroke="${col}" stroke-width="14" stroke-linecap="round"/>`;
+  }
+  const valDisplay = unit==='%' ? value.toFixed(1)+'%' : unit==='$' ? '$'+value.toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0}) : value.toFixed(1);
+  el.innerHTML = `
+    <div class="gauge-label">${label}</div>
+    <svg viewBox="0 0 180 100" width="160" height="90">
+      ${arcPath(0,180,r,'#E2E8EC')}
+      ${angle>1?arcPath(0,angle,r,color):''}
+      <text x="${cx}" y="${cy+4}" text-anchor="middle" font-size="16" font-weight="800" fill="#1C2E35">${valDisplay}</text>
+      <text x="16" y="${cy+18}" text-anchor="middle" font-size="9" fill="#9AADB5">0</text>
+      <text x="${cx*2-14}" y="${cy+18}" text-anchor="middle" font-size="9" fill="#9AADB5">${max}${unit}</text>
+    </svg>
+    <div class="gauge-sub">${valDisplay} de ${max}${unit}</div>
+  `;
+}
+
+function renderKPIGauges(bigId, gaugeId, cards, gauges){
+  // big cards (dinero)
+  const big=$(bigId);
+  if(big) big.innerHTML = cards.map(c=>`
+    <div class="kpi-big-card ${c.cls||''}">
+      <div class="kb-label">${c.label}</div>
+      <div class="kb-value">${c.value}</div>
+    </div>`).join('');
+  // gauge cards
+  const gc=$(gaugeId);
+  if(!gc) return;
+  gc.innerHTML = gauges.map(g=>`<div class="kpi-gauge-card" id="gauge-${g.id}"></div>`).join('');
+  gauges.forEach(g=>{
+    drawGauge('gauge-'+g.id, g.value, g.max, g.label, g.unit||'%', g.colorFn||null);
+  });
+}
+
+// ══════════════════════════════════════════════════
+// PIVOT HELPER
+// ══════════════════════════════════════════════════
+function buildPivot(data){
+  const lineas = [...new Set(data.map(r=>r.LINEA))].sort();
+  const detalles = [...new Set(data.map(r=>r.DETALLE))];
+  const pivot = {};
+  detalles.forEach(d=>{
+    pivot[d]={};
+    lineas.forEach(l=>{ pivot[d][l]=0; pivot[d]['Total']=0; });
+  });
+  data.forEach(r=>{
+    if(!pivot[r.DETALLE]) pivot[r.DETALLE]={};
+    pivot[r.DETALLE][r.LINEA]=(pivot[r.DETALLE][r.LINEA]||0)+r.TOTAL;
+    pivot[r.DETALLE]['Total']=(pivot[r.DETALLE]['Total']||0)+r.TOTAL;
+  });
+  // calcular métricas
+  const g = (det,col)=>pivot[det] ? (pivot[det][col]||0) : 0;
+  lineas.concat(['Total']).forEach(col=>{
+    const venta=g('VENTA DE BIENES',col)||1;
+    const boni=g('BONIFICACIÓN EN PRODUCTO',col);
+    const neta=(venta-boni)||1;
+    pivot['% CUMPLIMIENTO PRESUPUESTO']={...pivot['% CUMPLIMIENTO PRESUPUESTO']};
+    pivot['% CUMPLIMIENTO PRESUPUESTO'][col] = (g('VENTA DE BIENES',col)/((g('PRESUPUESTO VENTAS',col)||1)))*100;
+    pivot['% COSTO SOBRE VENTAS']={...pivot['% COSTO SOBRE VENTAS']};
+    pivot['% COSTO SOBRE VENTAS'][col] = (g('COSTO DE VENTAS Y PRODUCCIÓN',col)/neta)*100;
+    pivot['% GASTOS SOBRE VENTAS']={...pivot['% GASTOS SOBRE VENTAS']};
+    pivot['% GASTOS SOBRE VENTAS'][col] = (g('GASTOS',col)/neta)*100;
+    pivot['DÍAS DE INVENTARIO']={...pivot['DÍAS DE INVENTARIO']};
+    pivot['DÍAS DE INVENTARIO'][col] = (g('INVENTARIO',col)/(g('COSTO DE VENTAS Y PRODUCCIÓN',col)||1))*30;
+    pivot['GANANCIA NETA']={...pivot['GANANCIA NETA']};
+    pivot['GANANCIA NETA'][col] = g('VENTA DE BIENES',col)-boni-g('COSTO DE VENTAS Y PRODUCCIÓN',col)-g('GASTOS',col)+g('OTROS INGRESOS',col);
+    const gn=pivot['GANANCIA NETA'][col];
+    const part=Math.max(0,gn)*0.15;
+    pivot['PARTICIPACIÓN 15%']={...pivot['PARTICIPACIÓN 15%']};
+    pivot['PARTICIPACIÓN 15%'][col] = part;
+    const baseImp=gn-part;
+    pivot['BASE IMPONIBLE']={...pivot['BASE IMPONIBLE']};
+    pivot['BASE IMPONIBLE'][col] = baseImp;
+    const ir=Math.max(0,baseImp)*0.25;
+    pivot['IMPUESTO RENTA 25%']={...pivot['IMPUESTO RENTA 25%']};
+    pivot['IMPUESTO RENTA 25%'][col] = ir;
+    // Retenciones: el pivot suma todas las lineas correctamente, no dividir
+    const ret = g('RETENCIONES RENTA', col);
+    pivot['RETENCIONES RENTA NETA']={...pivot['RETENCIONES RENTA NETA']};
+    pivot['RETENCIONES RENTA NETA'][col] = ret;
+    pivot['IR POR PAGAR']={...pivot['IR POR PAGAR']};
+    pivot['IR POR PAGAR'][col] = Math.max(0, ir - ret);
+    pivot['UTILIDAD LIQUIDA']={...pivot['UTILIDAD LIQUIDA']};
+    pivot['UTILIDAD LIQUIDA'][col] = gn - part - ir;
+  });
+  const ORDEN=['VENTA DE BIENES','PRESUPUESTO VENTAS','% CUMPLIMIENTO PRESUPUESTO','BONIFICACIÓN EN PRODUCTO','COSTO DE VENTAS Y PRODUCCIÓN','% COSTO SOBRE VENTAS','OTROS INGRESOS','GASTOS','% GASTOS SOBRE VENTAS','INVENTARIO','DÍAS DE INVENTARIO','GANANCIA NETA','PARTICIPACIÓN 15%','BASE IMPONIBLE','IMPUESTO RENTA 25%','RETENCIONES RENTA NETA','IR POR PAGAR','UTILIDAD LIQUIDA'];
+  return {pivot, lineas, orden:ORDEN};
+}
+
+// ══════════════════════════════════════════════════
+// RENDER TABLA PIVOT
+// ══════════════════════════════════════════════════
+const FILAS_PCT=['% CUMPLIMIENTO PRESUPUESTO','% COSTO SOBRE VENTAS','% GASTOS SOBRE VENTAS'];
+const FILAS_DIAS=['DÍAS DE INVENTARIO'];
+const FILAS_CALC=['GANANCIA NETA','PARTICIPACIÓN 15%','BASE IMPONIBLE','IMPUESTO RENTA 25%','RETENCIONES RENTA NETA','IR POR PAGAR'];
+const FILAS_FINAL=['UTILIDAD LIQUIDA'];
+
+function renderPivotTable(tableId, {pivot,lineas,orden}){
+  const tbl=$(`#${tableId}`) || document.querySelector(`#${tableId}`);
+  if(!tbl) return;
+  const thead=tbl.querySelector('thead');
+  const tbody=tbl.querySelector('tbody');
+  const cols=['DETALLE',...lineas,'Total'];
+  thead.innerHTML=`<tr>${cols.map(c=>`<th>${c}</th>`).join('')}</tr>`;
+  tbody.innerHTML='';
+  orden.forEach(fila=>{
+    if(!pivot[fila]) return;
+    const pct=FILAS_PCT.includes(fila);
+    const dias=FILAS_DIAS.includes(fila);
+    const calc=FILAS_CALC.includes(fila);
+    const final=FILAS_FINAL.includes(fila);
+    const cls=final?'row-final':calc?'row-calc':pct?'row-pct':'';
+    const cells=[fila,...lineas,'Total'].map((c,i)=>{
+      if(i===0) return `<td>${fila}</td>`;
+      const v=pivot[fila][c]||0;
+      const fmt=pct?fmtPct(v):dias?fmtNum(v):fmt$(v);
+      return `<td>${fmt}</td>`;
+    });
+    tbody.innerHTML+=`<tr class="${cls}">${cells.join('')}</tr>`;
+  });
+}
+
+function renderKPI(containerId, cards){
+  const el=$(containerId);
+  if(!el) return;
+  el.innerHTML = cards.map(c=>`
+    <div class="kpi-card ${c.cls||''}">
+      <div class="kpi-label">${c.label}</div>
+      <div class="kpi-value">${c.value}</div>
+    </div>`).join('');
+}
+
+// ══════════════════════════════════════════════════
+// TAB 0 – NORMAL
+// ══════════════════════════════════════════════════
+function renderNormal(f=getFiltros()){
+  const data=filtrarBase(sheets.tablero,f);
+  const result=buildPivot(data);
+  const p=result.pivot;
+  const ventas=( p['VENTA DE BIENES'] && p['VENTA DE BIENES'].Total )||0;
+  const boni=(p['BONIFICACIÓN EN PRODUCTO'] && p['BONIFICACIÓN EN PRODUCTO'].Total)||0;
+  const gn=(p['GANANCIA NETA'] && p['GANANCIA NETA'].Total)||0;
+  const util=(p['UTILIDAD LIQUIDA'] && p['UTILIDAD LIQUIDA'].Total)||0;
+  const neta=(ventas-boni)||1;
+  const pctCump = (p['% CUMPLIMIENTO PRESUPUESTO'] && p['% CUMPLIMIENTO PRESUPUESTO'].Total)||0;
+  const pctCosto = (p['% COSTO SOBRE VENTAS'] && p['% COSTO SOBRE VENTAS'].Total)||0;
+  const pctGasto = (p['% GASTOS SOBRE VENTAS'] && p['% GASTOS SOBRE VENTAS'].Total)||0;
+  const pctMargen = (util/neta)*100;
+  renderKPIGauges('kpi-normal-big','kpi-normal-gauges',
+    [
+      {label:'💰 Ganancia Neta', value:fmt$(gn), cls:'green'},
+      {label:'💵 Utilidad Líquida', value:fmt$(util), cls:util>=0?'green':'red'},
+      {label:'💳 Venta Neta', value:fmt$(ventas-boni), cls:''},
+    ],
+    [
+      {id:'normal-cump', value:pctCump, max:100, label:'% Cumplimiento', unit:'%',
+       colorFn:v=>v>=95?'#1DB87A':v>=85?'#F0A500':'#E05252'},
+      {id:'normal-margen', value:Math.max(0,pctMargen), max:20, label:'% Margen', unit:'%',
+       colorFn:v=>v>=5?'#1DB87A':v>=2?'#F0A500':'#E05252'},
+      {id:'normal-costo', value:pctCosto, max:100, label:'% Costo Venta', unit:'%',
+       colorFn:v=>v<=80?'#1DB87A':v<=90?'#F0A500':'#E05252'},
+      {id:'normal-gasto', value:pctGasto, max:30, label:'% Gasto Venta', unit:'%',
+       colorFn:v=>v<=15?'#1DB87A':v<=20?'#F0A500':'#E05252'},
+    ]
+  );
+  const tblEl=document.getElementById('tbl-normal');
+  renderPivotTable('tbl-normal', result);
+}
+
+// ══════════════════════════════════════════════════
+// TAB 1 – SIN ADICIONALES
+// ══════════════════════════════════════════════════
+function renderSin(f=getFiltros()){
+  const data=filtrarBase(sheets.tablero,f);
+  const adic=filtrarBase(sheets.adicionales,f);
+
+  // restar adicionales de GASTOS
+  const adicByKey={};
+  adic.forEach(r=>{
+    const k=`${r.AÑO}|${r.MES}|${r.LINEA}`;
+    adicByKey[k]=(adicByKey[k]||0)+r.TOTAL;
+  });
+  const sinData=data.map(r=>{
+    if(r.DETALLE!=='GASTOS') return r;
+    const k=`${r.AÑO}|${r.MES}|${r.LINEA}`;
+    return {...r, TOTAL: r.TOTAL-(adicByKey[k]||0)};
+  });
+  const result=buildPivot(sinData);
+  const p=result.pivot;
+  const ventas=( p['VENTA DE BIENES'] && p['VENTA DE BIENES'].Total )||0;
+  const boni=(p['BONIFICACIÓN EN PRODUCTO'] && p['BONIFICACIÓN EN PRODUCTO'].Total)||0;
+  const gn=(p['GANANCIA NETA'] && p['GANANCIA NETA'].Total)||0;
+  const util=(p['UTILIDAD LIQUIDA'] && p['UTILIDAD LIQUIDA'].Total)||0;
+  const neta=(ventas-boni)||1;
+  const pctCumpS = (p['% CUMPLIMIENTO PRESUPUESTO'] && p['% CUMPLIMIENTO PRESUPUESTO'].Total)||0;
+  const pctCostoS = (p['% COSTO SOBRE VENTAS'] && p['% COSTO SOBRE VENTAS'].Total)||0;
+  const pctGastoS = (p['% GASTOS SOBRE VENTAS'] && p['% GASTOS SOBRE VENTAS'].Total)||0;
+  const pctMargenS = (util/neta)*100;
+  renderKPIGauges('kpi-sin-big','kpi-sin-gauges',
+    [
+      {label:'💰 Ganancia Neta', value:fmt$(gn), cls:'green'},
+      {label:'💵 Utilidad Líquida', value:fmt$(util), cls:util>=0?'green':'red'},
+      {label:'💳 Venta Neta', value:fmt$(ventas-boni), cls:''},
+    ],
+    [
+      {id:'sin-cump', value:pctCumpS, max:100, label:'% Cumplimiento', unit:'%',
+       colorFn:v=>v>=95?'#1DB87A':v>=85?'#F0A500':'#E05252'},
+      {id:'sin-margen', value:Math.max(0,pctMargenS), max:20, label:'% Margen', unit:'%',
+       colorFn:v=>v>=5?'#1DB87A':v>=2?'#F0A500':'#E05252'},
+      {id:'sin-costo', value:pctCostoS, max:100, label:'% Costo Venta', unit:'%',
+       colorFn:v=>v<=80?'#1DB87A':v<=90?'#F0A500':'#E05252'},
+      {id:'sin-gasto', value:pctGastoS, max:30, label:'% Gasto Venta', unit:'%',
+       colorFn:v=>v<=15?'#1DB87A':v<=20?'#F0A500':'#E05252'},
+    ]
+  );
+  renderPivotTable('tbl-sin', result);
+}
+
+// ══════════════════════════════════════════════════
+// TAB 2 – GASTOS
+// ══════════════════════════════════════════════════
+function renderGastos(f=getFiltros()){
+  let data=sheets.gastos.filter(r=>r.AÑO===f.año);
+  if(f.mes!=='TODOS') data=data.filter(r=>r.MES===f.mes);
+
+  const total=data.reduce((s,r)=>s+r.TOTAL,0);
+  const presup=data.reduce((s,r)=>s+r.Presupuesto,0);
+  const pct=(total/(presup||1))*100;
+  renderKPI('kpi-gastos',[
+    {label:'💰 Total Ejecutado',value:fmt$(total)},
+    {label:'📊 Presupuesto',value:fmt$(presup)},
+    {label:'🎯 % Ejecución',value:fmtPct(pct),cls:pct<=100?'green':'red'},
+  ]);
+
+  // tabla rubro
+  const rubros={};
+  data.forEach(r=>{
+    if(!rubros[r.Rubro]) rubros[r.Rubro]={Rubro:r.Rubro,TOTAL:0,Presupuesto:0};
+    rubros[r.Rubro].TOTAL+=r.TOTAL;
+    rubros[r.Rubro].Presupuesto+=r.Presupuesto;
+  });
+  const arr=Object.values(rubros).sort((a,b)=>b.TOTAL-a.TOTAL);
+  arr.forEach(r=>r['%']=(r.TOTAL/(r.Presupuesto||1))*100);
+
+  _gastosData = data; // guardar para expandir detalles
+  cerrarDetalleRubro();
+  const tbl=document.getElementById('tbl-gastos');
+  tbl.querySelector('thead').innerHTML='<tr><th>Rubro</th><th>Total</th><th>Presupuesto</th><th>%</th></tr>';
+  tbl.querySelector('tbody').innerHTML=arr.map(r=>`
+    <tr class="row-expandable" onclick="toggleDetalleRubro('${r.Rubro.replace(/'/g,"\\'")}')">
+      <td>${r.Rubro}</td>
+      <td>${fmt$(r.TOTAL)}</td>
+      <td>${fmt$(r.Presupuesto)}</td>
+      <td style="color:${r['%']>100?'var(--red)':'var(--green)'}">${fmtPct(r['%'])}</td>
+    </tr>`).join('');
+  makeTableSortable('tbl-gastos',[1,2,3]);
+
+  // chart
+  const top10=arr.slice(0,10);
+  destroyChart('chart-gastos');
+  charts['chart-gastos']=new Chart($('chart-gastos'),{
+    type:'bar',
+    data:{
+      labels:top10.map(r=>r.Rubro.substring(0,20)),
+      datasets:[{label:'Total',data:top10.map(r=>r.TOTAL),backgroundColor:'#1A7A8A',borderRadius:4}]
+    },
+    options:{indexAxis:'y',responsive:true,plugins:{legend:{display:false}},scales:{x:{ticks:{callback:v=>fmt$(v)}}}}
+  });
+
+  // accionistas
+  const acByKey={};
+  sheets.gastos_jefe.forEach(r=>{
+    const k=r.RUBRO;
+    if(!acByKey[k]) acByKey[k]={};
+    acByKey[k][r.BENEFICIARIO]=(acByKey[k][r.BENEFICIARIO]||0)+r.TOTAL;
+  });
+  const bens=[...new Set(sheets.gastos_jefe.map(r=>r.BENEFICIARIO))].filter(Boolean).sort();
+  const rows=Object.entries(acByKey).map(([rubro,vals])=>{
+    const total=bens.reduce((s,b)=>s+(vals[b]||0),0);
+    return {RUBRO:rubro,...Object.fromEntries(bens.map(b=>[b,vals[b]||0])),TOTAL:total};
+  });
+  const tblAc=document.getElementById('tbl-accionistas');
+  tblAc.querySelector('thead').innerHTML=`<tr><th>Rubro</th>${bens.map(b=>`<th>${b}</th>`).join('')}${bens.map(b=>`<th>% ${b}</th>`).join('')}<th>Total</th></tr>`;
+  tblAc.querySelector('tbody').innerHTML=rows.map(r=>`
+    <tr><td>${r.RUBRO}</td>${bens.map(b=>`<td>${fmt$(r[b])}</td>`).join('')}${bens.map(b=>`<td>${fmtPct((r[b]/(r.TOTAL||1))*100)}</td>`).join('')}<td>${fmt$(r.TOTAL)}</td></tr>`).join('');
+}
+
+// ══════════════════════════════════════════════════
+// TAB 3 – TRANSPORTE
+// ══════════════════════════════════════════════════
+function renderTransporte(f=getFiltros()){
+  let data=sheets.transporte.filter(r=>r.AÑO===f.año);
+  if(f.mes!=='TODOS') data=data.filter(r=>r.MES===f.mes);
+  if(f.linea!=='TODAS') data=data.filter(r=>r.LINEA===f.linea);
+  const ruta=$('sel-ruta').value;
+  if(ruta!=='TODAS') data=data.filter(r=>r.RUTA===ruta);
+
+  const totalPagado=data.reduce((s,r)=>s+r.TOTAL_PAGADO,0);
+  const pesoTotal=data.reduce((s,r)=>s+r.PESO,0);
+  const totalFact=data.reduce((s,r)=>s+r.FACTURAS,0);
+  const costoProm=totalFact?totalPagado/totalFact:0;
+
+  // venta linea para pct transporte
+  let vl=sheets.ventas_linea.filter(r=>r.AÑO===f.año);
+  if(f.mes!=='TODOS') vl=vl.filter(r=>r.MES===f.mes);
+  if(f.linea!=='TODAS') vl=vl.filter(r=>r.BASE===f.linea);
+  const totalVenta=vl.reduce((s,r)=>s+r.VENTA,0);
+  const pctTrans=totalVenta?totalPagado/totalVenta*100:0;
+
+  renderKPI('kpi-transporte',[
+    {label:'💰 Total Pagado',value:fmt$(totalPagado)},
+    {label:'📦 Peso Total',value:pesoTotal.toLocaleString('en-US',{maximumFractionDigits:0})},
+    {label:'📊 Costo Promedio',value:fmt$(costoProm)},
+    {label:'% Transporte / Venta',value:fmtPct(pctTrans)},
+  ]);
+
+  // tabla por responsable
+  const resp={};
+  data.forEach(r=>{
+    if(!resp[r.RESPONSABLE]) resp[r.RESPONSABLE]={RESPONSABLE:r.RESPONSABLE,FACTURAS:0,DIAS:0,PESO:0,VALOR_FLETE:0,TOTAL_PAGADO:0,TOTAL_GUIA:0,DEVOLUCIONES:0};
+    const o=resp[r.RESPONSABLE];
+    o.FACTURAS+=r.FACTURAS; o.DIAS+=r.DIAS; o.PESO+=r.PESO; o.VALOR_FLETE+=r.VALOR_FLETE; o.TOTAL_PAGADO+=r.TOTAL_PAGADO; o.TOTAL_GUIA+=r.TOTAL_GUIA; o.DEVOLUCIONES+=r.DEVOLUCIONES;
+  });
+  const arrResp=Object.values(resp);
+  arrResp.forEach(r=>{r.FLETE_DIA=r.VALOR_FLETE/(r.DIAS||1);r.PESO_DIA=r.PESO/(r.DIAS||1);r.DEV_DIA=r.DEVOLUCIONES/(r.DIAS||1);});
+
+  const tbl=document.getElementById('tbl-transporte');
+  tbl.querySelector('thead').innerHTML='<tr><th>Responsable</th><th>Facturas</th><th>Días</th><th>Peso</th><th>Flete</th><th>Total Pagado</th><th>Flete/Día</th><th>Devoluciones</th></tr>';
+  tbl.querySelector('tbody').innerHTML=arrResp.map(r=>`
+    <tr><td>${r.RESPONSABLE}</td><td>${r.FACTURAS}</td><td>${r.DIAS}</td><td>${r.PESO.toFixed(0)}</td><td>${fmt$(r.VALOR_FLETE)}</td><td>${fmt$(r.TOTAL_PAGADO)}</td><td>${fmt$(r.FLETE_DIA)}</td><td>${fmt$(r.DEVOLUCIONES)}</td></tr>`).join('');
+  makeTableSortable('tbl-transporte',[1,2,3,4,5,6,7],false);
+
+  // gráfico por línea
+  const porLinea={};
+  data.forEach(r=>{
+    if(!porLinea[r.LINEA]) porLinea[r.LINEA]={LINEA:r.LINEA,PAGADO:0,FACTURAS:0};
+    porLinea[r.LINEA].PAGADO+=r.TOTAL_PAGADO; porLinea[r.LINEA].FACTURAS+=r.FACTURAS;
+  });
+  const arrLinea=Object.values(porLinea).sort((a,b)=>b.PAGADO-a.PAGADO);
+  const colores=['#1A7A8A','#F0A500','#1DB87A','#E05252','#7B6CF6'];
+  destroyChart('chart-trans-linea');
+  charts['chart-trans-linea']=new Chart($('chart-trans-linea'),{
+    type:'doughnut',
+    data:{labels:arrLinea.map(r=>r.LINEA),datasets:[{data:arrLinea.map(r=>r.PAGADO),backgroundColor:colores,borderWidth:2}]},
+    options:{responsive:true,plugins:{legend:{position:'right'},tooltip:{callbacks:{label:ctx=>`${ctx.label}: ${fmt$(ctx.raw)} (${((ctx.raw/arrLinea.reduce((s,r)=>s+r.PAGADO,0))*100).toFixed(1)}%)`}}}}
+  });
+  destroyChart('chart-trans-fact');
+  charts['chart-trans-fact']=new Chart($('chart-trans-fact'),{
+    type:'bar',
+    data:{labels:arrLinea.map(r=>r.LINEA),datasets:[{label:'Facturas',data:arrLinea.map(r=>r.FACTURAS),backgroundColor:colores,borderRadius:4}]},
+    options:{responsive:true,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`${ctx.label}: ${ctx.raw.toLocaleString()} facturas`}}},scales:{y:{beginAtZero:true}},animation:{onComplete:function(){const chart=this;const ctx2=chart.ctx;chart.data.datasets.forEach((ds,di)=>{const meta=chart.getDatasetMeta(di);meta.data.forEach((bar,bi)=>{const val=ds.data[bi];ctx2.fillStyle='#1C2E35';ctx2.font='bold 11px Arial';ctx2.textAlign='center';ctx2.fillText(val.toLocaleString(),bar.x,bar.y-5);});});}}}
+  });
+
+  // gráficos tendencia (todos los años)
+  const tendencia={};
+  sheets.transporte.forEach(r=>{
+    const k=`${r.AÑO}|${r.MES}`;
+    if(!tendencia[k]) tendencia[k]={AÑO:r.AÑO,MES:r.MES,DIAS:0,PAGADO:0};
+    tendencia[k].DIAS+=r.DIAS; tendencia[k].PAGADO+=r.TOTAL_PAGADO;
+  });
+  const años=[...new Set(Object.values(tendencia).map(r=>r.AÑO))].sort();
+  const mesesOrden=ORDEN_MESES;
+  const colors=['#1A7A8A','#F0A500','#1DB87A','#E05252'];
+
+  destroyChart('chart-trans-dias');
+  charts['chart-trans-dias']=new Chart($('chart-trans-dias'),{
+    type:'line',
+    data:{
+      labels:mesesOrden,
+      datasets:años.map((a,i)=>({label:String(a),data:mesesOrden.map(m=>{const k=`${a}|${m}`;return (tendencia[k] && tendencia[k].DIAS)||null;}),borderColor:colors[i%colors.length],backgroundColor:'transparent',tension:.3,pointRadius:5,pointHoverRadius:7}))
+    },
+    options:{responsive:true,plugins:{legend:{display:true},tooltip:{callbacks:{label:ctx=>`${ctx.dataset.label}: ${ctx.raw} días`}}},scales:{y:{beginAtZero:false}}}
+  });
+  destroyChart('chart-trans-pago');
+  charts['chart-trans-pago']=new Chart($('chart-trans-pago'),{
+    type:'line',
+    data:{
+      labels:mesesOrden,
+      datasets:años.map((a,i)=>({label:String(a),data:mesesOrden.map(m=>{const k=`${a}|${m}`;return (tendencia[k] && tendencia[k].PAGADO)||null;}),borderColor:colors[i%colors.length],backgroundColor:'transparent',tension:.3,pointRadius:5,pointHoverRadius:7}))
+    },
+    options:{responsive:true,plugins:{legend:{display:true},tooltip:{callbacks:{label:ctx=>`${ctx.dataset.label}: ${fmt$(ctx.raw)}`}}},scales:{y:{ticks:{callback:v=>fmt$(v)}}}}
+  });
+}
+
+// ══════════════════════════════════════════════════
+// TAB 4 – RETORNOS
+// ══════════════════════════════════════════════════
+const EXCLUIR_MOTIVOS=['Error de digitación ( 21 )','Problemas con Congelador (Averiado) ( 24 )'];
+let _retData=[];
+
+function cerrarDetalleRetVendedor(){
+  const w=$('ret-vendedor-detalle');
+  if(w) w.style.display='none';
+}
+
+function mostrarClientesVendedor(vendedor){
+  const w=$('ret-vendedor-detalle');
+  const badge=$('badge-ret-vendedor-txt');
+  if(!w) return;
+  w.style.display='block';
+  if(badge) badge.textContent='Clientes de: '+vendedor;
+  const data=_retData.filter(r=>r.VENDEDOR===vendedor);
+  const clientes={};
+  data.forEach(r=>{
+    const k=r.CLIENTE||'Sin nombre';
+    if(!clientes[k]) clientes[k]={CLIENTE:k,IMPORTE:0,N:0,MOTIVOS:new Set()};
+    clientes[k].IMPORTE+=r.IMPORTE; clientes[k].N++;
+    if(r.MOT_DEVOLUCION) clientes[k].MOTIVOS.add(r.MOT_DEVOLUCION);
+  });
+  const arr=Object.values(clientes).sort((a,b)=>b.IMPORTE-a.IMPORTE);
+  const total={CLIENTE:'TOTAL',IMPORTE:arr.reduce((s,r)=>s+r.IMPORTE,0),N:arr.reduce((s,r)=>s+r.N,0),MOTIVOS:new Set()};
+  const tbl=$('tbl-ret-clientes');
+  tbl.querySelector('thead').innerHTML='<tr><th>Cliente</th><th># Ret.</th><th>Importe</th><th>Motivos</th></tr>';
+  tbl.querySelector('tbody').innerHTML=[...arr,total].map(r=>`
+    <tr ${r.CLIENTE==='TOTAL'?'class="row-total"':''}>
+      <td>${r.CLIENTE}</td><td>${r.N}</td><td>${fmt$(r.IMPORTE)}</td>
+      <td style="font-size:11px;color:var(--gray3)">${r.MOTIVOS.size?[...r.MOTIVOS].join(', '):''}</td>
+    </tr>`).join('');
+  makeTableSortable('tbl-ret-clientes',[1,2],false);
+}
+
+function renderRetornos(f=getFiltros()){
+  let data=sheets.retornos.filter(r=>r.AÑO===f.año);
+  if(f.mes!=='TODOS') data=data.filter(r=>r.MES===f.mes);
+  if(f.linea!=='TODAS') data=data.filter(r=>r.LINEA===f.linea);
+  const canal=$('sel-canal').value;
+  if(canal!=='TODOS') data=data.filter(r=>r.CANAL===canal);
+  data=data.filter(r=>!EXCLUIR_MOTIVOS.includes(r.MOT_DEVOLUCION));
+  _retData=data;
+
+  const totalRet=data.reduce((s,r)=>s+r.IMPORTE,0);
+  let vl=sheets.ventas_linea.filter(r=>r.AÑO===f.año);
+  if(f.mes!=='TODOS') vl=vl.filter(r=>r.MES===f.mes);
+  if(f.linea!=='TODAS') vl=vl.filter(r=>r.BASE===f.linea);
+  const totalVenta=vl.reduce((s,r)=>s+r.VENTA,0);
+  const pct=totalVenta?totalRet/totalVenta*100:0;
+
+  renderKPI('kpi-retornos',[
+    {label:'📉 % Retornos / Venta',value:fmtPct(pct),cls:pct<2?'green':pct<5?'amber':'red'},
+    {label:'💰 Total Importe',value:fmt$(totalRet)},
+  ]);
+
+  // chart por día
+  const porDia={};
+  data.forEach(r=>{
+    if(!r.FECHA) return;
+    const k=r.FECHA.toISOString().split('T')[0];
+    porDia[k]=(porDia[k]||0)+r.IMPORTE;
+  });
+  const fechas=Object.keys(porDia).sort();
+  destroyChart('chart-retornos');
+  charts['chart-retornos']=new Chart($('chart-retornos'),{
+    type:'line',
+    data:{labels:fechas,datasets:[{label:'Retornos',data:fechas.map(f=>porDia[f]),borderColor:'#E05252',backgroundColor:'rgba(224,82,82,.1)',fill:true,tension:.3,pointRadius:2}]},
+    options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{ticks:{callback:v=>fmt$(v)}}}}
+  });
+
+  // tabla vendedor — ordenada por importe desc, clickeable
+  const vendedor={};
+  data.forEach(r=>{
+    if(!vendedor[r.VENDEDOR]) vendedor[r.VENDEDOR]={VENDEDOR:r.VENDEDOR,IMPORTE:0,N:0};
+    vendedor[r.VENDEDOR].IMPORTE+=r.IMPORTE; vendedor[r.VENDEDOR].N++;
+  });
+  const arrV=Object.values(vendedor).sort((a,b)=>b.IMPORTE-a.IMPORTE);
+  const totalV={VENDEDOR:'TOTAL',IMPORTE:arrV.reduce((s,r)=>s+r.IMPORTE,0),N:arrV.reduce((s,r)=>s+r.N,0)};
+  const tblV=document.getElementById('tbl-ret-vendedor');
+  tblV.querySelector('thead').innerHTML='<tr><th>Vendedor</th><th># Ret.</th><th>Importe</th></tr>';
+  tblV.querySelector('tbody').innerHTML=[...arrV,totalV].map(r=>`
+    <tr class="${r.VENDEDOR==='TOTAL'?'row-total':'row-clickable'}" ${r.VENDEDOR!=='TOTAL'?`onclick="mostrarClientesVendedor('${r.VENDEDOR.replace(/'/g,"\'")}')"`:''}>
+      <td>${r.VENDEDOR}</td><td>${r.N}</td><td>${fmt$(r.IMPORTE)}</td>
+    </tr>`).join('');
+  makeTableSortable('tbl-ret-vendedor',[1,2]);
+  cerrarDetalleRetVendedor();
+
+  // tabla motivo
+  const motivo={};
+  data.forEach(r=>{
+    if(!motivo[r.MOT_DEVOLUCION]) motivo[r.MOT_DEVOLUCION]={MOT:r.MOT_DEVOLUCION,IMPORTE:0,N:0};
+    motivo[r.MOT_DEVOLUCION].IMPORTE+=r.IMPORTE; motivo[r.MOT_DEVOLUCION].N++;
+  });
+  const arrM=Object.values(motivo).sort((a,b)=>b.IMPORTE-a.IMPORTE);
+  const totalM={MOT:'TOTAL',IMPORTE:arrM.reduce((s,r)=>s+r.IMPORTE,0),N:arrM.reduce((s,r)=>s+r.N,0)};
+  const tblM=document.getElementById('tbl-ret-motivo');
+  tblM.querySelector('thead').innerHTML='<tr><th>Motivo</th><th># Ret.</th><th>Importe</th></tr>';
+  tblM.querySelector('tbody').innerHTML=[...arrM,totalM].map(r=>`<tr ${r.MOT==='TOTAL'?'class="row-total"':''}><td>${r.MOT}</td><td>${r.N}</td><td>${fmt$(r.IMPORTE)}</td></tr>`).join('');
+  makeTableSortable('tbl-ret-motivo',[1,2]);
+}
+
+// ══════════════════════════════════════════════════
+// TAB 5 – DESCUENTOS
+function cerrarDetalleDescEmp(){
+  const w=$('desc-emp-detalle');
+  if(w) w.style.display='none';
+}
+function mostrarDetalleDescEmp(emp){
+  const w=$('desc-emp-detalle');
+  const badge=$('badge-desc-emp-txt');
+  if(!w||!window._descDataGlobal) return;
+  w.style.display='block';
+  if(badge) badge.textContent='Detalle: '+emp;
+  const data=window._descDataGlobal.filter(r=>r.EMPLEADO===emp);
+  // agrupar por mes y tipo
+  const grp={};
+  data.forEach(r=>{
+    const k=`${r.MES}|${r.OBSERVACIONES}`;
+    if(!grp[k]) grp[k]={MES:r.MES,TIPO:r.OBSERVACIONES,LINEA:r.LINEA,TOTAL:0};
+    grp[k].TOTAL+=r.TOTAL;
+  });
+  const arr=Object.values(grp).sort((a,b)=>b.TOTAL-a.TOTAL);
+  const total={MES:'TOTAL',TIPO:'',LINEA:'',TOTAL:arr.reduce((s,r)=>s+r.TOTAL,0)};
+  const tbl=$('tbl-desc-emp-det');
+  tbl.querySelector('thead').innerHTML='<tr><th>Mes</th><th>Tipo</th><th>Línea</th><th>Total</th></tr>';
+  tbl.querySelector('tbody').innerHTML=[...arr,total].map(r=>`
+    <tr ${r.MES==='TOTAL'?'class="row-total"':''}>
+      <td>${r.MES}</td><td>${r.TIPO}</td><td>${r.LINEA}</td><td>${fmt$(r.TOTAL)}</td>
+    </tr>`).join('');
+  makeTableSortable('tbl-desc-emp-det',[3],false);
+}
+// ══════════════════════════════════════════════════
+function renderDescuentos(f=getFiltros()){
+  let data=sheets.descuentos.filter(r=>r.AÑO===f.año);
+  if(f.mes!=='TODOS') data=data.filter(r=>r.MES===f.mes);
+  if(f.linea!=='TODAS') data=data.filter(r=>r.LINEA===f.linea);
+  const tipo=$('sel-tipo-desc').value;
+  if(tipo!=='TODOS') data=data.filter(r=>r.OBSERVACIONES===tipo);
+
+  const total=data.reduce((s,r)=>s+r.TOTAL,0);
+  renderKPI('kpi-descuentos',[{label:'💰 Total Descuentos',value:fmt$(total)}]);
+
+  // chart por mes
+  const porMes={};
+  data.forEach(r=>{ porMes[r.MES]=(porMes[r.MES]||0)+r.TOTAL; });
+  const mesesOrden=ORDEN_MESES.filter(m=>porMes[m]!=null);
+  destroyChart('chart-desc');
+  charts['chart-desc']=new Chart($('chart-desc'),{
+    type:'line',
+    data:{labels:mesesOrden,datasets:[{label:'Descuentos',data:mesesOrden.map(m=>porMes[m]||0),borderColor:'#F0A500',backgroundColor:'rgba(240,165,0,.1)',fill:true,tension:.3,pointRadius:4}]},
+    options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{ticks:{callback:v=>fmt$(v)}}}}
+  });
+
+  // por empleado — clickeable
+  let _descDataLocal=data;
+  const emp={};
+  data.forEach(r=>{ emp[r.EMPLEADO]=(emp[r.EMPLEADO]||0)+r.TOTAL; });
+  const arrE=Object.entries(emp).map(([k,v])=>({EMPLEADO:k,TOTAL:v})).sort((a,b)=>b.TOTAL-a.TOTAL);
+  arrE.push({EMPLEADO:'TOTAL',TOTAL:arrE.reduce((s,r)=>s+r.TOTAL,0)});
+  const tblE=document.getElementById('tbl-desc-emp');
+  tblE.querySelector('thead').innerHTML='<tr><th>Empleado</th><th>Total</th></tr>';
+  tblE.querySelector('tbody').innerHTML=arrE.map(r=>`
+    <tr class="${r.EMPLEADO==='TOTAL'?'row-total':'row-clickable'}" ${r.EMPLEADO!=='TOTAL'?`onclick="mostrarDetalleDescEmp('${r.EMPLEADO.replace(/'/g,"\'")}')"`:''}>
+      <td>${r.EMPLEADO}</td><td>${fmt$(r.TOTAL)}</td>
+    </tr>`).join('');
+  makeTableSortable('tbl-desc-emp',[1]);
+  window._descDataGlobal=data;
+  cerrarDetalleDescEmp();
+
+  // por observación
+  const obs={};
+  data.forEach(r=>{ obs[r.OBSERVACIONES]=(obs[r.OBSERVACIONES]||0)+r.TOTAL; });
+  const arrO=Object.entries(obs).map(([k,v])=>({OBS:k,TOTAL:v})).sort((a,b)=>b.TOTAL-a.TOTAL);
+  arrO.push({OBS:'TOTAL',TOTAL:arrO.reduce((s,r)=>s+r.TOTAL,0)});
+  const tblO=document.getElementById('tbl-desc-obs');
+  tblO.querySelector('thead').innerHTML='<tr><th>Tipo</th><th>Total</th></tr>';
+  tblO.querySelector('tbody').innerHTML=arrO.map(r=>`<tr ${r.OBS==='TOTAL'?'class="row-total"':''}><td>${r.OBS}</td><td>${fmt$(r.TOTAL)}</td></tr>`).join('');
+  makeTableSortable('tbl-desc-obs',[1]);
+
+  // torta por tipo
+  const coloresTorta=['#1A7A8A','#F0A500','#1DB87A','#E05252','#7B6CF6','#2BAFCA','#FF8C42'];
+  const arrOSinTotal=arrO.filter(r=>r.OBS!=='TOTAL');
+  destroyChart('chart-desc-tipo');
+  charts['chart-desc-tipo']=new Chart($('chart-desc-tipo'),{
+    type:'doughnut',
+    data:{labels:arrOSinTotal.map(r=>r.OBS),datasets:[{data:arrOSinTotal.map(r=>r.TOTAL),backgroundColor:coloresTorta,borderWidth:2}]},
+    options:{responsive:true,plugins:{legend:{position:'bottom',labels:{font:{size:11}}},tooltip:{callbacks:{label:ctx=>`${ctx.label}: ${fmt$(ctx.raw)}`}}}}
+  });
+}
+
+// ══════════════════════════════════════════════════
+// TAB 6 – NCS PENDIENTES
+// ══════════════════════════════════════════════════
+function renderNCS(f=getFiltros()){
+  let data=sheets.ncs.filter(r=>r.AÑO===f.año);
+  if(f.mes!=='TODOS') data=data.filter(r=>r.MES===f.mes);
+  if(f.linea!=='TODAS') data=data.filter(r=>r.LINEA===f.linea);
+  if(_ncsLineaActiva) data=data.filter(r=>r.LINEA===_ncsLineaActiva);
+
+  const total=data.reduce((s,r)=>s+r.PENDIENTE,0);
+  const totalRec=data.reduce((s,r)=>s+r.MONTO_RECLAMAR,0);
+  const totalPag=data.reduce((s,r)=>s+r.MONTO_PAGADO,0);
+  renderKPI('kpi-ncs',[
+    {label:'⚠️ Total Pendiente',value:fmt$(total),cls:total>0?'amber':'green'},
+    {label:'📋 Por Reclamar',value:fmt$(totalRec)},
+    {label:'✅ Ya Pagado',value:fmt$(totalPag),cls:'green'},
+  ]);
+
+  const porMes={};
+  data.forEach(r=>{ porMes[r.MES]=(porMes[r.MES]||0)+r.PENDIENTE; });
+  const mesesOrden=ORDEN_MESES.filter(m=>porMes[m]!=null);
+  destroyChart('chart-ncs');
+  charts['chart-ncs']=new Chart($('chart-ncs'),{
+    type:'bar',
+    data:{labels:mesesOrden,datasets:[{label:'Pendiente',data:mesesOrden.map(m=>porMes[m]||0),backgroundColor:'#F0A500',borderRadius:4}]},
+    options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{ticks:{callback:v=>fmt$(v)}}}}
+  });
+
+  // tabla por línea — clickeable
+  const grpL={};
+  data.forEach(r=>{ grpL[r.LINEA]=(grpL[r.LINEA]||0)+r.PENDIENTE; });
+  const arrL=Object.entries(grpL).filter(([,v])=>v!==0).map(([k,v])=>({k,v})).sort((a,b)=>b.v-a.v);
+  const tblL=document.getElementById('tbl-ncs-linea');
+  tblL.querySelector('thead').innerHTML='<tr><th>Línea</th><th>Pendiente</th></tr>';
+  tblL.querySelector('tbody').innerHTML=[...arrL,{k:'TOTAL',v:arrL.reduce((s,r)=>s+r.v,0)}].map(r=>`
+    <tr class="${r.k==='TOTAL'?'row-total':'row-clickable'}" ${r.k!=='TOTAL'?`onclick="filtrarNCSLinea('${r.k}')"`:''}><td>${r.k}</td><td>${fmt$(r.v)}</td></tr>`).join('');
+  makeTableSortable('tbl-ncs-linea',[1]);
+  renderSimpleGroupTable(data,'DETALLE','PENDIENTE','tbl-ncs-det','Detalle');
+  makeTableSortable('tbl-ncs-det',[1]);
+
+
+}
+
+// ══════════════════════════════════════════════════
+// TAB 7 – NCS FINANCIERAS
+// ══════════════════════════════════════════════════
+function renderFin(f=getFiltros()){
+  let data=sheets.fin.filter(r=>r.AÑO===f.año);
+  if(f.mes!=='TODOS') data=data.filter(r=>r.MES===f.mes);
+  if(f.linea!=='TODAS') data=data.filter(r=>r.LINEA===f.linea);
+  if(_finLineaActiva) data=data.filter(r=>r.LINEA===_finLineaActiva);
+
+  const total=data.reduce((s,r)=>s+r.TOTAL,0);
+  renderKPI('kpi-fin',[{label:'💸 Total Descuentos Financieros',value:fmt$(total)}]);
+
+  const porMes={};
+  data.forEach(r=>{ porMes[r.MES]=(porMes[r.MES]||0)+r.TOTAL; });
+  const mesesOrden=ORDEN_MESES.filter(m=>porMes[m]!=null);
+  destroyChart('chart-fin');
+  charts['chart-fin']=new Chart($('chart-fin'),{
+    type:'bar',
+    data:{labels:mesesOrden,datasets:[{label:'Total',data:mesesOrden.map(m=>porMes[m]||0),backgroundColor:'#1A7A8A',borderRadius:4}]},
+    options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{ticks:{callback:v=>fmt$(v)}}}}
+  });
+
+  // tabla por línea — clickeable
+  const grpL={};
+  data.forEach(r=>{ grpL[r.LINEA]=(grpL[r.LINEA]||0)+r.TOTAL; });
+  const arrL=Object.entries(grpL).filter(([,v])=>v!==0).map(([k,v])=>({k,v})).sort((a,b)=>b.v-a.v);
+  const tblL=document.getElementById('tbl-fin-linea');
+  tblL.querySelector('thead').innerHTML='<tr><th>Línea</th><th>Total</th></tr>';
+  tblL.querySelector('tbody').innerHTML=[...arrL,{k:'TOTAL',v:arrL.reduce((s,r)=>s+r.v,0)}].map(r=>`
+    <tr class="${r.k==='TOTAL'?'row-total':'row-clickable'}" ${r.k!=='TOTAL'?`onclick="filtrarFinLinea('${r.k}')"`:''}><td>${r.k}</td><td>${fmt$(r.v)}</td></tr>`).join('');
+  makeTableSortable('tbl-fin-linea',[1]);
+  renderSimpleGroupTable(data,'DETALLE','TOTAL','tbl-fin-det','Detalle');
+  makeTableSortable('tbl-fin-det',[1]);
+
+
+}
+
+// ══════════════════════════════════════════════════
+// TAB 8 – RENTABILIDAD PROVEEDOR
+// ══════════════════════════════════════════════════
+
+
+// ══════════════════════════════════════════════════
+// HELPER: tabla simple grupo→valor
+// ══════════════════════════════════════════════════
+function renderSimpleGroupTable(data, campo, campoVal, tblId, label){
+  const grp={};
+  data.forEach(r=>{ grp[r[campo]]=(grp[r[campo]]||0)+r[campoVal]; });
+  const arr=Object.entries(grp).filter(([,v])=>v!==0).map(([k,v])=>({k,v})).sort((a,b)=>b.v-a.v);
+  const total=arr.reduce((s,r)=>s+r.v,0);
+  const tbl=document.getElementById(tblId);
+  tbl.querySelector('thead').innerHTML=`<tr><th>${label}</th><th>Total</th></tr>`;
+  tbl.querySelector('tbody').innerHTML=[...arr,{k:'TOTAL',v:total}].map(r=>`<tr ${r.k==='TOTAL'?'class="row-total"':''}><td>${r.k}</td><td>${fmt$(r.v)}</td></tr>`).join('');
+  makeTableSortable(tblId,[1]);
+}
+
+// ══════════════════════════════════════════════════
+// CHART DESTROY
+// ══════════════════════════════════════════════════
+function destroyChart(id){
+  if(charts[id]){ charts[id].destroy(); delete charts[id]; }
+}
+
+
+// ══════════════════════════════════════════════════
+// TABLA DINÁMICA — ORDENABLE
+// ══════════════════════════════════════════════════
+function makeTableSortable(tblId, numCols=[], excludeLast=true){
+  const tbl = document.getElementById(tblId);
+  if(!tbl) return;
+  const ths = tbl.querySelectorAll('thead th');
+  let sortCol=-1, sortDir=1;
+  ths.forEach((th,i)=>{
+    th.classList.add('sortable');
+    th.addEventListener('click',()=>{
+      if(sortCol===i) sortDir*=-1; else { sortCol=i; sortDir=1; }
+      ths.forEach(h=>{ h.classList.remove('sort-asc','sort-desc'); });
+      th.classList.add(sortDir===1?'sort-asc':'sort-desc');
+      const tbody = tbl.querySelector('tbody');
+      // excluir filas especiales del sort
+      const rows = Array.from(tbody.querySelectorAll('tr:not(.row-detail):not(.row-total):not(.row-calc):not(.row-final):not(.row-pct)'));
+      const fixedRows = Array.from(tbody.querySelectorAll('tr.row-total, tr.row-calc, tr.row-final, tr.row-pct'));
+      // cerrar expandidos
+      tbody.querySelectorAll('tr.row-detail').forEach(r=>r.remove());
+      tbody.querySelectorAll('tr.row-expandable').forEach(r=>r.classList.remove('open'));
+      rows.sort((a,b)=>{
+        const av = a.cells[i]? a.cells[i].dataset.val || a.cells[i].textContent.replace(/[$,%\s]/g,'').trim() : '';
+        const bv = b.cells[i]? b.cells[i].dataset.val || b.cells[i].textContent.replace(/[$,%\s]/g,'').trim() : '';
+        const an=parseFloat(av.replace(/,/g,'')), bn=parseFloat(bv.replace(/,/g,''));
+        if(!isNaN(an)&&!isNaN(bn)) return (an-bn)*sortDir;
+        return av.localeCompare(bv)*sortDir;
+      });
+      rows.forEach(r=>tbody.appendChild(r));
+      fixedRows.forEach(r=>tbody.appendChild(r));
+    });
+  });
+}
+
+// ══════════════════════════════════════════════════
+// GASTOS — EXPANDIR DETALLE POR RUBRO
+// ══════════════════════════════════════════════════
+let _gastosData = [];
+let _gastosRubroActivo = null;
+
+function cerrarDetalleRubro(){
+  _gastosRubroActivo = null;
+  const wrap = document.getElementById('detalle-rubro-wrap');
+  if(wrap) wrap.style.display='none';
+  // quitar open de todas las filas
+  document.querySelectorAll('#tbl-gastos .row-expandable').forEach(r=>r.classList.remove('open'));
+}
+
+function abrirDetalleRubro(rubro, data){
+  _gastosRubroActivo = rubro;
+  const wrap = document.getElementById('detalle-rubro-wrap');
+  const badge = document.getElementById('badge-rubro-nombre');
+  if(wrap) wrap.style.display='block';
+  if(badge) badge.textContent = rubro;
+
+  const detalles = {};
+  data.filter(r=>r.Rubro===rubro).forEach(r=>{
+    if(!detalles[r.Detalle]) detalles[r.Detalle]={Detalle:r.Detalle,TOTAL:0,Presupuesto:0};
+    detalles[r.Detalle].TOTAL+=r.TOTAL;
+    detalles[r.Detalle].Presupuesto+=r.Presupuesto;
+  });
+  const arr=Object.values(detalles).sort((a,b)=>b.TOTAL-a.TOTAL);
+  arr.forEach(r=>r['%']=(r.TOTAL/(r.Presupuesto||1))*100);
+  const total={Detalle:'TOTAL',TOTAL:arr.reduce((s,r)=>s+r.TOTAL,0),Presupuesto:arr.reduce((s,r)=>s+r.Presupuesto,0)};
+  total['%']=total.TOTAL/(total.Presupuesto||1)*100;
+
+  const tbl = document.getElementById('tbl-gastos-det');
+  tbl.querySelector('thead').innerHTML='<tr><th>Detalle</th><th>Total</th><th>Presupuesto</th><th>%</th></tr>';
+  tbl.querySelector('tbody').innerHTML=[...arr,total].map(r=>`
+    <tr ${r.Detalle==='TOTAL'?'class="row-total"':''}>
+      <td>${r.Detalle}</td><td>${fmt$(r.TOTAL)}</td><td>${fmt$(r.Presupuesto)}</td>
+      <td style="color:${r['%']>100?'var(--red)':'var(--green)'}">${fmtPct(r['%'])}</td>
+    </tr>`).join('');
+  makeTableSortable('tbl-gastos-det',[1,2,3]);
+}
+
+// ══════════════════════════════════════════════════
+// NCS PENDIENTES — FILTRO POR LÍNEA
+// ══════════════════════════════════════════════════
+let _ncsLineaActiva = null;
+
+function limpiarFiltroNCS(){
+  _ncsLineaActiva = null;
+  const wrap = document.getElementById('badge-ncs-wrap');
+  if(wrap) wrap.style.display='none';
+  renderNCS();
+}
+
+function filtrarNCSLinea(linea){
+  _ncsLineaActiva = linea;
+  const wrap = document.getElementById('badge-ncs-wrap');
+  const badge = document.getElementById('badge-ncs-nombre');
+  if(wrap) wrap.style.display='block';
+  if(badge) badge.textContent = linea;
+  renderNCS();
+}
+
+// ══════════════════════════════════════════════════
+// NCS FINANCIERAS — FILTRO POR LÍNEA
+// ══════════════════════════════════════════════════
+let _finLineaActiva = null;
+
+function limpiarFiltroFin(){
+  _finLineaActiva = null;
+  const wrap = document.getElementById('badge-fin-wrap');
+  if(wrap) wrap.style.display='none';
+  renderFin();
+}
+
+function filtrarFinLinea(linea){
+  _finLineaActiva = linea;
+  const wrap = document.getElementById('badge-fin-wrap');
+  const badge = document.getElementById('badge-fin-nombre');
+  if(wrap) wrap.style.display='block';
+  if(badge) badge.textContent = linea;
+  renderFin();
+}
+
+function toggleDetalleRubro(rubro){
+  const rows = document.querySelectorAll('#tbl-gastos .row-expandable');
+  rows.forEach(r=>{ if(r.querySelector('td').textContent===rubro) r.classList.toggle('open'); else r.classList.remove('open'); });
+  if(_gastosRubroActivo===rubro){ cerrarDetalleRubro(); }
+  else { abrirDetalleRubro(rubro, _gastosData); }
+}
+
+
+// ══════════════════════════════════════════════════
+// TALENTO HUMANO
+// ══════════════════════════════════════════════════
+function sheetToJSONT(name){
+  if(!WB_TALENTO || !WB_TALENTO.SheetNames.includes(name)) return [];
+  const ws = WB_TALENTO.Sheets[name];
+  // Leer headers de fila 2 manualmente
+  const ref = XLSX.utils.decode_range(ws['!ref']);
+  const headers = [];
+  for(let c = ref.s.c; c <= ref.e.c; c++){
+    const cell = ws[XLSX.utils.encode_cell({r:1, c:c})]; // fila 2 (0-indexed=1)
+    headers.push(cell ? String(cell.v).replace(/\n/g,' ').trim() : '__EMPTY_'+c);
+  }
+  // Leer datos desde fila 4 (0-indexed=3, saltar fila 3 que es la nota)
+  const result = [];
+  for(let r = 3; r <= ref.e.r; r++){
+    const row = {};
+    let hasData = false;
+    for(let c = ref.s.c; c <= ref.e.c; c++){
+      const cell = ws[XLSX.utils.encode_cell({r:r, c:c})];
+      const val = cell ? cell.v : '';
+      row[headers[c - ref.s.c]] = val;
+      if(val !== '') hasData = true;
+    }
+    if(hasData) result.push(row);
+  }
+  return result;
+}
+
+function procesarSheetsTalento(){
+  // Helper: normalizar clave (quitar saltos de línea, espacios extra, uppercase)
+  function nk(k){ return k.replace(/\n/g,' ').replace(/\s+/g,' ').trim().toUpperCase(); }
+
+  // TALENTO ACTUAL — headers con \n literal
+  const rawA = sheetToJSONT('TALENTO ACTUAL');
+  sheets.talento_actual = rawA.map(r=>{
+    const obj={};
+    Object.keys(r).forEach(k=>{ obj[nk(k)]=r[k]; });
+    return {
+      DEPARTAMENTO: cleanStr(obj['DEPARTAMENTO']),
+      FECHA_CORTE:  cleanStr(obj['FECHA CORTE']),
+      OBJETIVO:     cleanNum(obj['PLANTA OBJETIVO']||0),
+      REAL:         cleanNum(obj['PLANTA REAL']||0),
+      PASANTES:     cleanNum(obj['PASANTES']||0),
+      DISCAP:       cleanNum(obj['DISCAPA- CITADOS']||obj['DISCAPACITADOS']||0),
+      SUST:         cleanNum(obj['SUSTITUTOS']||0),
+      VACANTES:     cleanNum(obj['VACANTES']||0),
+    };
+  }).filter(r=>r.DEPARTAMENTO && r.DEPARTAMENTO!=='TOTAL EMPRESA' && r.OBJETIVO>0);
+
+  // TALENTO MENSUAL
+  const rawM = sheetToJSONT('TALENTO MENSUAL');
+  sheets.talento_mensual = rawM.map(r=>{
+    const obj={};
+    Object.keys(r).forEach(k=>{ obj[nk(k)]=r[k]; });
+    return {
+      AÑO:   cleanNum(obj['ANO']||obj['AÑO']||0),
+      MES:   cleanUpper(obj['MES']),
+      DEP:   cleanStr(obj['DEPARTAMENTO']),
+      REAL:  cleanNum(obj['PLANTA REAL']||0),
+      ING:   cleanNum(obj['INGRESOS (MES)']||0),
+      SAL:   cleanNum(obj['SALIDAS (MES)']||0),
+      MEMOS: cleanNum(obj['MEMOS EMIT.']||0),
+      LLAM:  cleanNum(obj['LLAMADOS ATENCION']||0),
+    };
+  }).filter(r=>r.DEP && r.MES && r.DEP!=='DEPARTAMENTO');
+
+  // MEMOS
+  const rawMemos = sheetToJSONT('MEMOS');
+  sheets.memos = rawMemos.map(r=>{
+    const obj={};
+    Object.keys(r).forEach(k=>{ obj[nk(k)]=r[k]; });
+    const fecha = obj['FECHA EMISION'];
+    const js = excelDateToJSDate(typeof fecha==='number'?fecha:null);
+    return {
+      AÑO:   cleanNum(obj['ANO']||obj['AÑO']||0),
+      MES:   cleanUpper(obj['MES']),
+      DEP:   cleanStr(obj['DEPARTAMENTO']),
+      NOMBRE:cleanStr(obj['NOMBRE EMPLEADO']),
+      CARGO: cleanStr(obj['CARGO']),
+      TIPO:  cleanStr(obj['TIPO DOCUMENTO']),
+      MOTIVO:cleanStr(obj['MOTIVO']),
+      FECHA: js ? js.toLocaleDateString('es-EC') : cleanStr(String(fecha)),
+      GRAV:  cleanStr(obj['GRAVEDAD']),
+      OBS:   cleanStr(obj['OBSERVACIONES']),
+    };
+  }).filter(r=>r.DEP && r.MES && r.DEP!=='DEPARTAMENTO');
+}
+
+function poblarFiltrosTalento(){
+  const deps=[...new Set(sheets.talento_mensual.map(r=>r.DEP))].filter(Boolean).sort();
+  const sd=$('sel-talento-dep');
+  if(sd){ sd.innerHTML='<option value="TODOS">TODOS</option>'; deps.forEach(d=>{ sd.innerHTML+=`<option>${d}</option>`; }); }
+  const sm=$('sel-memo-dep');
+  if(sm){ sm.innerHTML='<option value="TODOS">TODOS</option>'; deps.forEach(d=>{ sm.innerHTML+=`<option>${d}</option>`; }); }
+}
+
+let _talentoMensualData = [];
+
+function cerrarDetalleTalento(){
+  const wrap=$('talento-rot-detalle');
+  if(wrap) wrap.style.display='none';
+}
+
+function mostrarDetalleTalento(mes){
+  const data=_talentoMensualData.filter(r=>r.MES===mes);
+  if(!data.length) return;
+  const wrap=$('talento-rot-detalle');
+  const badge=$('badge-talento-mes-txt');
+  if(wrap) wrap.style.display='block';
+  if(badge) badge.textContent='Detalle: '+mes;
+  const tbl=$('tbl-talento-detalle');
+  tbl.querySelector('thead').innerHTML='<tr><th>Departamento</th><th>Planta Real</th><th>Ingresos</th><th>Salidas</th><th>Memos</th><th>Llamados</th><th>Rotación %</th></tr>';
+  tbl.querySelector('tbody').innerHTML=data.map(r=>{
+    const rot=r.REAL?((r.ING+r.SAL)/r.REAL*100):0;
+    return `<tr>
+      <td><b>${r.DEP}</b></td><td>${r.REAL}</td>
+      <td style="color:var(--green);font-weight:700">${r.ING}</td>
+      <td style="color:var(--red);font-weight:700">${r.SAL}</td>
+      <td>${r.MEMOS}</td><td>${r.LLAM}</td>
+      <td style="color:${rot>5?'var(--red)':rot>3?'var(--amber)':'var(--green)'};font-weight:700">${fmtPct(rot)}</td>
+    </tr>`;
+  }).join('');
+}
+
+function renderTalento(){
+  if(!WB_TALENTO){ return; }
+  const CLIST=['#1A7A8A','#F0A500','#1DB87A','#E05252','#7B6CF6'];
+
+  const act = sheets.talento_actual;
+  const totReal=act.reduce((s,r)=>s+r.REAL,0);
+  const totDisc=act.reduce((s,r)=>s+r.DISCAP+r.SUST,0);
+  const totPas=act.reduce((s,r)=>s+r.PASANTES,0);
+  const totVac=act.reduce((s,r)=>s+r.VACANTES,0);
+  const pctDisc=totReal?(totDisc/totReal*100):0;
+  const cumpleDisc=pctDisc>=4;
+  const debeTener=Math.round(totReal*0.04);
+  const MIN_PASANTES=2;
+  const cumplePas=totPas>=MIN_PASANTES;
+
+  const fc=$('talento-fecha-corte');
+  if(fc && act.length) fc.textContent='— Corte: '+act[0].FECHA_CORTE;
+
+  const talEl=$('kpi-talento');
+  if(talEl){
+    const totObj2=act.reduce((s,r)=>s+r.OBJETIVO,0);
+    const faltanDisc=Math.max(0,debeTener-totDisc);
+    const faltanPas=Math.max(0,MIN_PASANTES-totPas);
+    talEl.className='kpi-consolidado-grid';
+    talEl.innerHTML=`
+      <!-- Card Planta -->
+      <div class="kpi-con-card ${totVac===0?'green':totVac<=3?'amber':'red'}">
+        <div class="kpi-con-title">👥 Nómina</div>
+        <div class="kpi-con-row"><span class="kpi-con-row-label">Planta Objetivo</span><span class="kpi-con-row-val">${totObj2}</span></div>
+        <div class="kpi-con-row"><span class="kpi-con-row-label">Planta Real</span><span class="kpi-con-row-val green">${totReal}</span></div>
+        <div class="kpi-con-row"><span class="kpi-con-row-label">Vacantes</span><span class="kpi-con-row-val ${totVac===0?'green':totVac<=3?'amber':'red'}">${totVac}</span></div>
+        <div class="kpi-con-status ${totVac===0?'ok':'bad'}">${totVac===0?'✓ Planta completa':'⚠️ Faltan '+totVac+' personas'}</div>
+      </div>
+      <!-- Card Discapacitados -->
+      <div class="kpi-con-card ${cumpleDisc?'green':'red'}">
+        <div class="kpi-con-title">♿ Discapacitados + Sustitutos</div>
+        <div class="kpi-con-row"><span class="kpi-con-row-label">Tenemos</span><span class="kpi-con-row-val">${totDisc}</span></div>
+        <div class="kpi-con-row"><span class="kpi-con-row-label">Debemos tener (4% de ${totReal})</span><span class="kpi-con-row-val amber">${debeTener}</span></div>
+        <div class="kpi-con-row"><span class="kpi-con-row-label">${cumpleDisc?'Excedente':'Faltan'}</span><span class="kpi-con-row-val ${cumpleDisc?'green':'red'}">${cumpleDisc?totDisc-debeTener:faltanDisc}</span></div>
+        <div class="kpi-con-status ${cumpleDisc?'ok':'bad'}">${cumpleDisc?'✓ Cumple obligación legal':'✗ Incumple — faltan '+faltanDisc+' personas'}</div>
+      </div>
+      <!-- Card Pasantes -->
+      <div class="kpi-con-card ${cumplePas?'green':'red'}">
+        <div class="kpi-con-title">📋 Pasantes</div>
+        <div class="kpi-con-row"><span class="kpi-con-row-label">Tenemos</span><span class="kpi-con-row-val">${totPas}</span></div>
+        <div class="kpi-con-row"><span class="kpi-con-row-label">Mínimo requerido</span><span class="kpi-con-row-val amber">${MIN_PASANTES}</span></div>
+        <div class="kpi-con-row"><span class="kpi-con-row-label">${cumplePas?'Excedente':'Faltan'}</span><span class="kpi-con-row-val ${cumplePas?'green':'red'}">${cumplePas?totPas-MIN_PASANTES:faltanPas}</span></div>
+        <div class="kpi-con-status ${cumplePas?'ok':'bad'}">${cumplePas?'✓ Cumple mínimo de pasantes':'✗ Faltan '+faltanPas+' pasantes'}</div>
+      </div>
+    `;
+  }
+
+  let mens=sheets.talento_mensual;
+  _talentoMensualData=mens;
+  const depSel=$('sel-talento-dep')?$('sel-talento-dep').value:'TODOS';
+  if(depSel!=='TODOS') mens=mens.filter(r=>r.DEP===depSel);
+  const deps=[...new Set(sheets.talento_mensual.map(r=>r.DEP))].sort();
+  const mesesData=[...new Set(sheets.talento_mensual.map(r=>r.MES))].sort((a,b)=>ORDEN_MESES.indexOf(a)-ORDEN_MESES.indexOf(b));
+
+  destroyChart('chart-talento-rot');
+  const ctx=$('chart-talento-rot');
+  charts['chart-talento-rot']=new Chart(ctx,{
+    type:'line',
+    data:{
+      labels:mesesData,
+      datasets:(depSel==='TODOS'?deps:[depSel]).map((dep,i)=>({
+        label:dep,
+        data:mesesData.map(m=>{
+          const r=sheets.talento_mensual.find(x=>x.MES===m&&x.DEP===dep);
+          return r&&r.REAL?(((r.ING+r.SAL)/r.REAL)*100):null;
+        }),
+        borderColor:CLIST[i%CLIST.length],backgroundColor:'transparent',tension:.3,pointRadius:6,pointHoverRadius:9,
+      }))
+    },
+    options:{
+      responsive:true,
+      plugins:{legend:{display:true},tooltip:{callbacks:{label:ctx2=>`${ctx2.dataset.label}: ${ctx2.raw.toFixed(1)}% — clic para ver detalle`}}},
+      scales:{y:{ticks:{callback:v=>v.toFixed(1)+'%'}}},
+      onClick:(e,elements)=>{
+        if(!elements.length) return;
+        const idx=elements[0].index;
+        const mes=mesesData[idx];
+        cerrarDetalleTalento();
+        mostrarDetalleTalento(mes);
+      }
+    }
+  });
+
+  cerrarDetalleTalento();
+  renderMemos();
+}
+
+let _memoFiltroGrav = null;
+
+function filtrarMemoGrav(grav){
+  _memoFiltroGrav = _memoFiltroGrav === grav ? null : grav;
+  renderMemos();
+}
+
+function renderMemos(){
+  if(!WB_TALENTO) return;
+  let data=sheets.memos;
+  const dep=$('sel-memo-dep')?$('sel-memo-dep').value:'TODOS';
+  const gravSel=$('sel-memo-grav')?$('sel-memo-grav').value:'TODOS';
+  if(dep!=='TODOS') data=data.filter(r=>r.DEP===dep);
+  if(gravSel!=='TODOS') data=data.filter(r=>r.GRAV===gravSel);
+
+  const total=data.length;
+  const leves=data.filter(r=>r.GRAV==='Leve').length;
+  const mods=data.filter(r=>r.GRAV==='Moderada').length;
+  const graves=data.filter(r=>r.GRAV==='Grave').length;
+
+  // KPIs clickeables
+  const kpiEl=$('kpi-memos');
+  if(kpiEl){
+    const cards=[
+      {label:'📋 Total',value:total,cls:'',grav:null},
+      {label:'🟢 Leves',value:leves,cls:'green',grav:'Leve'},
+      {label:'🟡 Moderadas',value:mods,cls:'amber',grav:'Moderada'},
+      {label:'🔴 Graves',value:graves,cls:'red',grav:'Grave'},
+    ];
+    kpiEl.innerHTML=cards.map(c=>{
+      const isActive = _memoFiltroGrav===null || _memoFiltroGrav===c.grav;
+      return `<div class="kpi-card ${c.cls} clickable ${isActive?'active':'inactive'}"
+           onclick="filtrarMemoGrav('${c.grav||''}')">
+        <div class="kpi-label">${c.label}</div>
+        <div class="kpi-value">${c.value}</div>
+      </div>`;
+    }).join('');
+  }
+
+  // filtrar tabla por gravedad clickeada
+  let dataTabla = _memoFiltroGrav ? data.filter(r=>r.GRAV===_memoFiltroGrav) : data;
+
+  // charts con data completa
+  const porMes={};
+  data.forEach(r=>{ porMes[r.MES]=(porMes[r.MES]||0)+1; });
+  const mesesM=ORDEN_MESES.filter(m=>porMes[m]);
+  destroyChart('chart-memos-mes');
+  charts['chart-memos-mes']=new Chart($('chart-memos-mes'),{
+    type:'bar',
+    data:{labels:mesesM,datasets:[{label:'Documentos',data:mesesM.map(m=>porMes[m]||0),backgroundColor:'#1A7A8A',borderRadius:4}]},
+    options:{responsive:true,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`${ctx.raw} documentos`}}},scales:{y:{beginAtZero:true,ticks:{stepSize:1}}},
+      onClick:(e,els)=>{
+        if(!els.length) return;
+        const mes=mesesM[els[0].index];
+        // filtrar selector de mes del tablero principal no aplica aquí, solo info
+      }
+    }
+  });
+
+  destroyChart('chart-memos-grav');
+  charts['chart-memos-grav']=new Chart($('chart-memos-grav'),{
+    type:'doughnut',
+    data:{labels:['Leve','Moderada','Grave'],datasets:[{data:[leves,mods,graves],backgroundColor:['#1DB87A','#F0A500','#E05252'],borderWidth:2}]},
+    options:{responsive:true,plugins:{legend:{position:'bottom'},tooltip:{callbacks:{label:ctx=>`${ctx.label}: ${ctx.raw}`}}},
+      onClick:(e,els)=>{
+        if(!els.length) return;
+        const gravMap=['Leve','Moderada','Grave'];
+        filtrarMemoGrav(gravMap[els[0].index]);
+      }
+    }
+  });
+
+  // tabla filtrada
+  const GRAV_C={'Leve':'var(--green)','Moderada':'var(--amber)','Grave':'var(--red)'};
+  const tbl=$('tbl-memos');
+  tbl.querySelector('thead').innerHTML='<tr><th>Mes</th><th>Departamento</th><th>Empleado</th><th>Cargo</th><th>Tipo</th><th>Motivo</th><th>Fecha</th><th>Gravedad</th><th>Observaciones</th></tr>';
+  tbl.querySelector('tbody').innerHTML=dataTabla.map(r=>`
+    <tr>
+      <td>${r.MES}</td><td>${r.DEP}</td><td>${r.NOMBRE}</td><td>${r.CARGO}</td>
+      <td>${r.TIPO}</td><td>${r.MOTIVO}</td><td>${r.FECHA}</td>
+      <td style="color:${GRAV_C[r.GRAV]||'inherit'};font-weight:700">${r.GRAV}</td>
+      <td>${r.OBS}</td>
+    </tr>`).join('');
+  makeTableSortable('tbl-memos',[],false);
+}
+
+
+// ══════════════════════════════════════════════════
+// TAB 9 – REBATE
+// ══════════════════════════════════════════════════
+function cerrarDetalleRebProv(){
+  const w=$('reb-prov-detalle');
+  if(w) w.style.display='none';
+}
+
+function mostrarDetalleRebProv(prov, data){
+  const w=$('reb-prov-detalle');
+  const badge=$('badge-reb-prov-txt');
+  if(!w) return;
+  w.style.display='block';
+  if(badge) badge.textContent='Detalle por mes: '+prov;
+  const d=data.filter(r=>r.PROV===prov);
+  const porMes={};
+  d.forEach(r=>{
+    if(!porMes[r.MES]) porMes[r.MES]={MES:r.MES,PAGADO:0,META:0,PRONTO:0};
+    porMes[r.MES].PAGADO+=r.PAGADO; porMes[r.MES].META+=r.META; porMes[r.MES].PRONTO+=r.PRONTO;
+  });
+  const arr=Object.values(porMes).sort((a,b)=>ORDEN_MESES.indexOf(a.MES)-ORDEN_MESES.indexOf(b.MES));
+  arr.forEach(r=>{ r.PERDIDO=Math.max(0,r.META-r.PAGADO); r.PCT=r.META?(r.PAGADO/r.META*100):0; });
+  const tot={MES:'TOTAL',PAGADO:arr.reduce((s,r)=>s+r.PAGADO,0),META:arr.reduce((s,r)=>s+r.META,0),PRONTO:arr.reduce((s,r)=>s+r.PRONTO,0),PERDIDO:arr.reduce((s,r)=>s+r.PERDIDO,0)};
+  tot.PCT=tot.META?(tot.PAGADO/tot.META*100):0;
+  const tbl=$('tbl-reb-meses');
+  tbl.querySelector('thead').innerHTML='<tr><th>Mes</th><th>Rebate Pagado</th><th>Meta</th><th>% Cumplimiento</th><th>Perdido</th><th>Pronto Pago</th></tr>';
+  tbl.querySelector('tbody').innerHTML=[...arr,tot].map(r=>`
+    <tr ${r.MES==='TOTAL'?'class="row-total"':''}>
+      <td>${r.MES}</td>
+      <td>${fmt$(r.PAGADO)}</td>
+      <td>${fmt$(r.META)}</td>
+      <td style="color:${r.PCT>=90?'var(--green)':r.PCT>=70?'var(--amber)':'var(--red)'};font-weight:700">${fmtPct(r.PCT)}</td>
+      <td style="color:var(--red);font-weight:700">${fmt$(r.PERDIDO)}</td>
+      <td style="color:var(--green)">${fmt$(r.PRONTO)}</td>
+    </tr>`).join('');
+  makeTableSortable('tbl-reb-meses',[1,2,4,5],false);
+}
+
+function renderRebate(f=getFiltros()){
+  if(!sheets.rebate_tab) return;
+  let data=sheets.rebate_tab.filter(r=>r.AÑO===f.año);
+  if(f.mes!=='TODOS') data=data.filter(r=>r.MES===f.mes);
+  const linSel=$('sel-reb-linea')?$('sel-reb-linea').value:'TODAS';
+  const provSel=$('sel-reb-prov')?$('sel-reb-prov').value:'TODOS';
+  if(linSel!=='TODAS') data=data.filter(r=>r.LINEA===linSel);
+  if(provSel!=='TODOS') data=data.filter(r=>r.PROV===provSel);
+
+  const totPag=data.reduce((s,r)=>s+r.PAGADO,0);
+  const totMeta=data.reduce((s,r)=>s+r.META,0);
+  const totPronto=data.reduce((s,r)=>s+r.PRONTO,0);
+  const totPerdido=Math.max(0,totMeta-totPag);
+  const pctCump=totMeta?(totPag/totMeta*100):0;
+
+  renderKPI('kpi-rebate-tab',[
+    {label:'💰 Rebate Ganado',value:fmt$(totPag),cls:'green'},
+    {label:'🎯 Meta Rebate',value:fmt$(totMeta),cls:''},
+    {label:'📊 % Cumplimiento',value:fmtPct(pctCump),cls:pctCump>=90?'green':pctCump>=70?'amber':'red'},
+    {label:'📉 Rebate Perdido',value:fmt$(totPerdido),cls:totPerdido>0?'red':'green'},
+    {label:'⚡ Pronto Pago',value:fmt$(totPronto),cls:'green'},
+    {label:'💎 Total (Rebate+PP)',value:fmt$(totPag+totPronto),cls:'green'},
+  ]);
+
+  const CLIST=['#1A7A8A','#F0A500','#1DB87A','#E05252','#7B6CF6','#2BAFCA'];
+
+  // ── Chart por proveedor ──
+  const porProv={};
+  data.forEach(r=>{
+    if(!porProv[r.PROV]) porProv[r.PROV]={PROV:r.PROV,PAGADO:0,META:0};
+    porProv[r.PROV].PAGADO+=r.PAGADO; porProv[r.PROV].META+=r.META;
+  });
+  const arrProv=Object.values(porProv).sort((a,b)=>b.META-a.META);
+  destroyChart('chart-reb-prov');
+  charts['chart-reb-prov']=new Chart($('chart-reb-prov'),{
+    type:'bar',
+    data:{
+      labels:arrProv.map(r=>r.PROV),
+      datasets:[
+        {label:'Meta',data:arrProv.map(r=>r.META),backgroundColor:'#E2E8EC',borderRadius:4},
+        {label:'Pagado',data:arrProv.map(r=>r.PAGADO),backgroundColor:arrProv.map(r=>r.PAGADO>=r.META?'#1DB87A':'#1A7A8A'),borderRadius:4},
+      ]
+    },
+    options:{responsive:true,plugins:{legend:{display:true},tooltip:{callbacks:{label:ctx=>`${ctx.dataset.label}: ${fmt$(ctx.raw)}`}}},scales:{y:{ticks:{callback:v=>fmt$(v)}}}}
+  });
+
+  // ── Chart evolución mensual ──
+  const porMes={};
+  data.forEach(r=>{
+    if(!porMes[r.MES]) porMes[r.MES]={PAGADO:0,META:0,PRONTO:0};
+    porMes[r.MES].PAGADO+=r.PAGADO; porMes[r.MES].META+=r.META; porMes[r.MES].PRONTO+=r.PRONTO;
+  });
+  const mesesR=ORDEN_MESES.filter(m=>porMes[m]);
+  destroyChart('chart-reb-mes');
+  charts['chart-reb-mes']=new Chart($('chart-reb-mes'),{
+    type:'line',
+    data:{
+      labels:mesesR,
+      datasets:[
+        {label:'Rebate Pagado',data:mesesR.map(m=>porMes[m].PAGADO),borderColor:'#1DB87A',backgroundColor:'rgba(29,184,122,.1)',fill:true,tension:.3,pointRadius:5},
+        {label:'Meta',data:mesesR.map(m=>porMes[m].META),borderColor:'#E2E8EC',borderDash:[5,5],pointRadius:3,backgroundColor:'transparent',tension:.3},
+        {label:'Pronto Pago',data:mesesR.map(m=>porMes[m].PRONTO),borderColor:'#F0A500',backgroundColor:'transparent',tension:.3,pointRadius:4},
+      ]
+    },
+    options:{responsive:true,plugins:{legend:{display:true},tooltip:{callbacks:{label:ctx=>`${ctx.dataset.label}: ${fmt$(ctx.raw)}`}}},scales:{y:{ticks:{callback:v=>fmt$(v)}}}}
+  });
+
+  // ── Chart rebate perdido por mes ──
+  const perdidoMes=mesesR.map(m=>Math.max(0,porMes[m].META-porMes[m].PAGADO));
+  destroyChart('chart-reb-perdido');
+  charts['chart-reb-perdido']=new Chart($('chart-reb-perdido'),{
+    type:'bar',
+    data:{labels:mesesR,datasets:[{label:'Rebate Perdido',data:perdidoMes,backgroundColor:'#E05252',borderRadius:4}]},
+    options:{responsive:true,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`Perdido: ${fmt$(ctx.raw)}`}}},scales:{y:{ticks:{callback:v=>fmt$(v)}}}}
+  });
+
+  // ── Chart por línea ──
+  const porLinea={};
+  data.forEach(r=>{ porLinea[r.LINEA]=(porLinea[r.LINEA]||0)+r.PAGADO; });
+  const arrLin=Object.entries(porLinea).map(([k,v])=>({k,v})).sort((a,b)=>b.v-a.v);
+  destroyChart('chart-reb-linea');
+  charts['chart-reb-linea']=new Chart($('chart-reb-linea'),{
+    type:'doughnut',
+    data:{labels:arrLin.map(r=>r.k),datasets:[{data:arrLin.map(r=>r.v),backgroundColor:CLIST,borderWidth:2}]},
+    options:{responsive:true,plugins:{legend:{position:'right'},tooltip:{callbacks:{label:ctx=>`${ctx.label}: ${fmt$(ctx.raw)} (${((ctx.raw/totPag)*100).toFixed(1)}%)`}}}}
+  });
+
+  // ── Tabla por proveedor clickeable ──
+  const tblP=$('tbl-reb-prov');
+  arrProv.forEach(r=>{ r.PERDIDO=Math.max(0,r.META-r.PAGADO); r.PCT=r.META?(r.PAGADO/r.META*100):0; r.PRONTO=data.filter(x=>x.PROV===r.PROV).reduce((s,x)=>s+x.PRONTO,0); });
+  const totRow={PROV:'TOTAL',PAGADO:totPag,META:totMeta,PERDIDO:totPerdido,PCT:pctCump,PRONTO:totPronto};
+  tblP.querySelector('thead').innerHTML='<tr><th>Proveedor</th><th>Rebate Pagado</th><th>Meta</th><th>% Cumplim.</th><th>Perdido</th><th>Pronto Pago</th></tr>';
+  tblP.querySelector('tbody').innerHTML=[...arrProv,totRow].map(r=>`
+    <tr class="${r.PROV==='TOTAL'?'row-total':'row-clickable'}" ${r.PROV!=='TOTAL'?`onclick="mostrarDetalleRebProv('${r.PROV.replace(/'/g,"\'")}',${JSON.stringify([])})"`:''}
+        onclick="${r.PROV!=='TOTAL'?`mostrarDetalleRebProv('${r.PROV.replace(/'/g,"\'")}',window._rebDataGlobal)`:''}">
+      <td>${r.PROV}</td>
+      <td>${fmt$(r.PAGADO)}</td>
+      <td>${fmt$(r.META)}</td>
+      <td style="color:${r.PCT>=90?'var(--green)':r.PCT>=70?'var(--amber)':'var(--red)'};font-weight:700">${fmtPct(r.PCT)}</td>
+      <td style="color:var(--red)">${fmt$(r.PERDIDO)}</td>
+      <td style="color:var(--green)">${fmt$(r.PRONTO)}</td>
+    </tr>`).join('');
+  window._rebDataGlobal=data;
+  makeTableSortable('tbl-reb-prov',[1,2,4,5]);
+  cerrarDetalleRebProv();
+}
+
+// Sin drag & drop — datos vienen del servidor
+</script>
+</body>
+</html>

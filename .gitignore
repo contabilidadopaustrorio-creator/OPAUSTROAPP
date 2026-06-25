@@ -1,0 +1,13 @@
+# Sistema operativo / OneDrive
+Thumbs.db
+ehthumbs.db
+desktop.ini
+$RECYCLE.BIN/
+*.tmp
+~$*
+
+# Herramientas locales
+.claude/
+
+# Capturas de pantalla temporales
+_shot_rep.png

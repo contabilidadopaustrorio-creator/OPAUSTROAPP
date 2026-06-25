@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta name="theme-color" content="#0a1628">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Opaustro">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="manifest.webmanifest">
+<title>Opaustro — Portal de Aplicaciones</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;min-height:100vh;background:#0a1628;display:flex;align-items:center;justify-content:center;padding:24px;position:relative;overflow:hidden;}
+body:before{content:"";position:fixed;inset:0;background:radial-gradient(ellipse at 20% 18%,rgba(0,91,158,.28) 0%,transparent 46%),radial-gradient(ellipse at 82% 82%,rgba(124,58,237,.18) 0%,transparent 44%),linear-gradient(135deg,#0a1628 0%,#0d2240 55%,#0a1628 100%);pointer-events:none;}
+body:after{content:"";position:fixed;inset:0;background-image:linear-gradient(rgba(255,255,255,.018) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.018) 1px,transparent 1px);background-size:54px 54px;pointer-events:none;}
+.portal{width:100%;max-width:960px;position:relative;z-index:1;}
+.top{text-align:center;margin-bottom:46px;}
+.logo-wrap{display:inline-flex;align-items:center;justify-content:center;background:#fff;border-radius:16px;padding:16px 30px;margin-bottom:22px;box-shadow:0 16px 40px rgba(0,0,0,.45),0 0 0 1px rgba(255,255,255,.06);}
+.logo-wrap img{height:48px;width:auto;display:block;}
+.top h1{font-size:30px;font-weight:800;color:#fff;letter-spacing:.01em;}
+.top .accent{width:54px;height:3px;background:linear-gradient(90deg,#0077cc,#7c3aed);border-radius:3px;margin:14px auto 16px;}
+.top p{font-size:13px;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.18em;font-weight:600;}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:18px;}
+.mod{position:relative;border-radius:18px;padding:0;text-align:left;transition:.22s cubic-bezier(.2,.7,.3,1);cursor:pointer;text-decoration:none;display:block;overflow:hidden;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.09);min-height:188px;}
+.mod .body{padding:26px 22px 22px;position:relative;z-index:2;height:100%;display:flex;flex-direction:column;}
+.mod .bar{height:4px;width:100%;}
+.mod.active:hover{transform:translateY(-6px);border-color:rgba(255,255,255,.22);box-shadow:0 22px 48px rgba(0,0,0,.45);}
+.mod.active:hover .glow{opacity:.9;}
+.glow{position:absolute;top:-40%;right:-30%;width:200px;height:200px;border-radius:50%;filter:blur(46px);opacity:.5;transition:.22s;z-index:1;}
+.mod.disabled{opacity:.5;cursor:not-allowed;pointer-events:none;}
+.ico{width:54px;height:54px;border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:28px;margin-bottom:auto;box-shadow:0 8px 20px rgba(0,0,0,.3);}
+.name{font-size:17px;font-weight:800;color:#fff;letter-spacing:.05em;margin-top:18px;}
+.desc{font-size:11px;color:rgba(255,255,255,.6);margin-top:5px;line-height:1.5;}
+.soon{display:inline-block;font-size:9px;font-weight:700;color:rgba(255,255,255,.55);margin-top:8px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);padding:3px 9px;border-radius:20px;text-transform:uppercase;letter-spacing:.1em;}
+.arrow{position:absolute;bottom:20px;right:20px;font-size:15px;color:rgba(255,255,255,.45);transition:.2s;z-index:2;}
+.mod.active:hover .arrow{color:#fff;transform:translateX(3px);}
+/* colores por modulo */
+.m-log .bar{background:linear-gradient(90deg,#005B9E,#0099ff);}.m-log .ico{background:linear-gradient(135deg,#005B9E,#0077cc);}.m-log .glow{background:#0077cc;}
+.m-ger .bar{background:linear-gradient(90deg,#7c3aed,#a855f7);}.m-ger .ico{background:linear-gradient(135deg,#7c3aed,#9d4edd);}.m-ger .glow{background:#9d4edd;}
+.m-ven .bar{background:linear-gradient(90deg,#047857,#10b981);}.m-ven .ico{background:linear-gradient(135deg,#047857,#059669);}.m-ven .glow{background:#059669;}
+.m-th  .bar{background:linear-gradient(90deg,#b45309,#f59e0b);}.m-th .ico{background:linear-gradient(135deg,#b45309,#d97706);}
+.footer{text-align:center;margin-top:38px;font-size:11px;color:rgba(255,255,255,.28);letter-spacing:.04em;}
+@media(max-width:540px){.top h1{font-size:23px;}.grid{grid-template-columns:1fr 1fr;gap:12px;}.mod{min-height:160px;}.mod .body{padding:20px 16px 18px;}.ico{width:46px;height:46px;font-size:23px;}.name{font-size:14px;}}
+</style>
+</head>
+<body>
+<div class="portal">
+  <div class="top">
+    <div class="logo-wrap"><img src="./logo_opaustro.png" alt="Opaustro" onerror="this.parentNode.style.display='none'"></div>
+    <h1>Opaustro Cía. Ltda.</h1>
+    <div class="accent"></div>
+    <p>Portal Corporativo</p>
+  </div>
+  <div class="grid">
+    <a class="mod m-log active" href="./cabinets.html">
+      <div class="bar"></div>
+      <div class="glow"></div>
+      <div class="body">
+        <div class="ico">🚚</div>
+        <div class="name">LOGÍSTICA</div>
+        <div class="desc">Cabinets · Taller · Movimientos</div>
+        <span class="arrow">→</span>
+      </div>
+    </a>
+    <a class="mod m-ger active" href="./tablero.html">
+      <div class="bar"></div>
+      <div class="glow"></div>
+      <div class="body">
+        <div class="ico">📊</div>
+        <div class="name">GERENCIA</div>
+        <div class="desc">Tablero · Costos · Indicadores</div>
+        <span class="arrow">→</span>
+      </div>
+    </a>
+    <a class="mod m-ven active" href="./ventas-hub.html">
+      <div class="bar"></div>
+      <div class="glow"></div>
+      <div class="body">
+        <div class="ico">💰</div>
+        <div class="name">VENTAS</div>
+        <div class="desc">Mapa Territorial · Indicadores</div>
+        <span class="arrow">→</span>
+      </div>
+    </a>
+    <div class="mod m-th disabled">
+      <div class="bar"></div>
+      <div class="body">
+        <div class="ico">👥</div>
+        <div class="name">TALENTO HUMANO</div>
+        <div class="desc">Manual de funciones-reportes</div>
+        <span class="soon">Próximamente</span>
+      </div>
+    </div>
+  </div>
+  <div class="footer">Opaustro · Sistema interno v2.0 · 2026</div>
+</div>
+<script>
+if('serviceWorker' in navigator){
+  window.addEventListener('load', function(){
+    navigator.serviceWorker.register('./sw.js').catch(function(e){console.warn('SW error:',e);});
+  });
+}
+</script>
+</body>
+</html>

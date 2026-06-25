@@ -1,0 +1,1969 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta name="theme-color" content="#005B9E">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Cabinets">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>Control Cabinets Magnum</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+:root{--bg:#eef1f4;--surf:#fff;--surf2:#f7f9fb;--brd:#dfe5eb;--txt:#18202a;--mut:#687386;--acc:#111827;--accl:#eef2f7;--ok-c:#3B6D11;--ok-b:#EAF3DE;--mt-c:#185FA5;--mt-b:#dbeafe;--dn-c:#A32D2D;--dn-b:#FCEBEB;--mv-c:#854F0B;--mv-b:#FAEEDA;--pl-c:#6d28d9;--pl-b:#ede9fe;--a-c:#0f6e56;--a-b:#d1fae5;--b-c:#185FA5;--b-b:#dbeafe;--c-c:#7c3aed;--c-b:#ede9fe;--r:10px;--rs:6px;}
+@media(prefers-color-scheme:dark){:root{--bg:#0f1117;--surf:#1a1d27;--surf2:#21252f;--brd:#2e3340;--txt:#e8eaf0;--mut:#9ca3af;--acc:#5DCAA5;--accl:#04342C;}}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--txt);font-family:system-ui,-apple-system,sans-serif;font-size:14px;line-height:1.5;}
+.hdr{background:rgba(255,255,255,.96);backdrop-filter:saturate(1.2) blur(10px);border-bottom:1px solid var(--brd);padding:9px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200;gap:10px;flex-wrap:wrap;box-shadow:0 1px 0 rgba(15,23,42,.02);} .brand-left{display:flex;align-items:center;gap:14px;min-width:260px}.brand-logos{display:flex;align-items:center;gap:12px}.brand-opa{height:34px;width:auto;max-width:145px;object-fit:contain}.brand-mag{height:21px;width:auto;max-width:120px;object-fit:contain;opacity:.72;filter:grayscale(.15)}.brand-sep{width:1px;height:30px;background:var(--brd)}
+.slbl{font-size:11px;color:var(--mut);}
+.dot{width:7px;height:7px;border-radius:50%;background:#10b981;display:inline-block;margin-right:4px;}
+.sync-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.btn{padding:6px 12px;border-radius:var(--rs);font-size:12px;font-weight:700;cursor:pointer;border:1px solid var(--brd);background:var(--surf2);color:var(--txt);transition:.15s;white-space:nowrap;box-shadow:0 1px 1px rgba(15,23,42,.04);} 
+.btn:hover{opacity:.85;}
+.btn-acc{background:var(--acc)!important;color:#fff!important;border-color:var(--acc)!important;}
+.btn-cap{background:var(--c-b)!important;color:var(--c-c)!important;border-color:var(--c-c)!important;}
+.btn-sal{background:var(--mv-b)!important;color:var(--mv-c)!important;border-color:var(--mv-c)!important;}
+.btn-ok{background:var(--ok-b);color:var(--ok-c);border:1px solid var(--ok-c);}
+.nav{display:flex;gap:1px;background:#dde3ea;overflow-x:auto;box-shadow:inset 0 -1px 0 var(--brd);}
+.nt{padding:9px 16px;font-size:13px;font-weight:500;cursor:pointer;color:var(--mut);background:var(--surf2);border:none;white-space:nowrap;border-bottom:2px solid transparent;transition:.15s;}
+.nt.on{background:var(--surf);color:var(--acc);border-bottom-color:var(--acc);font-weight:700;}
+.wrap{max-width:1320px;margin:0 auto;padding:18px 20px;}
+.pane{display:none;}.pane.on{display:block;}
+/* KPI */
+.kgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(115px,1fr));gap:10px;margin-bottom:16px;}
+.kcard{background:linear-gradient(180deg,#fff,#fbfcfd);border:1px solid var(--brd);border-radius:8px;padding:13px 15px;box-shadow:0 6px 18px rgba(15,23,42,.04);}
+.kcard.kclick{cursor:pointer;transition:transform .16s ease,border-color .16s ease,box-shadow .16s ease;}
+.kcard.kclick:hover,.kcard.kclick:focus-visible{transform:translateY(-2px);border-color:var(--acc);box-shadow:0 9px 22px rgba(15,23,42,.10);outline:none;}
+.kcard.kclick:active{transform:translateY(0);}
+.klbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--mut);margin-bottom:5px;}
+.kval{font-size:28px;font-weight:800;line-height:1;}
+.ksub{font-size:10px;color:var(--mut);margin-top:3px;}
+/* CARD */
+.card{background:var(--surf);border:1px solid var(--brd);border-radius:8px;padding:16px 18px;margin-bottom:14px;box-shadow:0 8px 22px rgba(15,23,42,.04);}
+.ch{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px;}
+.ct{font-size:13px;font-weight:700;}.cc{font-size:11px;color:var(--mut);}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+@media(max-width:700px){.g2{grid-template-columns:1fr;}}
+/* ALERTA PLANIFICACION */
+.alert-plan{background:var(--mv-b);border:1px solid var(--mv-c);border-radius:var(--r);padding:12px 16px;margin-bottom:16px;display:none;}
+.alert-plan.on{display:flex;align-items:flex-start;gap:10px;}
+.alert-plan .ico{font-size:20px;}
+.alert-plan .msg{flex:1;}
+.alert-plan .msg strong{font-size:13px;color:var(--mv-c);}
+.alert-plan .msg p{font-size:12px;color:var(--mv-c);margin-top:2px;}
+/* TABLA */
+.tw{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:12px;}
+th{text-align:left;padding:7px 9px;font-size:10px;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.04em;border-bottom:1px solid var(--brd);white-space:nowrap;}
+td{padding:8px 9px;border-bottom:1px solid var(--brd);vertical-align:middle;}
+tr:last-child td{border-bottom:none;}
+tbody tr:hover td{background:#f4f7fa;}
+.tp{font-family:monospace;font-weight:700;color:var(--acc);font-size:12px;}
+.tm{color:var(--mut);font-size:11px;}
+tr.plan-hoy td{background:#fffbeb;}
+tr.plan-vencida td{background:#fff1f2;}
+/* BADGES */
+.badge{display:inline-flex;align-items:center;padding:2px 7px;border-radius:20px;font-size:10px;font-weight:700;white-space:nowrap;}
+.b-ok{background:var(--ok-b);color:var(--ok-c);}.b-mt{background:var(--mt-b);color:var(--mt-c);}.b-dn{background:var(--dn-b);color:var(--dn-c);}.b-mv{background:var(--mv-b);color:var(--mv-c);}.b-pl{background:var(--pl-b);color:var(--pl-c);}
+.b-a{background:var(--a-b);color:var(--a-c);}.b-b{background:var(--b-b);color:var(--b-c);}.b-c{background:var(--c-b);color:var(--c-c);}
+/* ETAPA CARDS */
+.ecards{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;}
+.ecard{flex:1;min-width:100px;background:var(--surf2);border:1px solid var(--brd);border-radius:var(--rs);padding:10px 12px;text-align:center;}
+.ecard .el{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;}
+.ecard .ev{font-size:22px;font-weight:800;}.ecard .ed{font-size:9px;color:var(--mut);margin-top:2px;}
+.ec-a .el,.ec-a .ev{color:var(--a-c);}.ec-b .el,.ec-b .ev{color:var(--b-c);}.ec-c .el,.ec-c .ev{color:var(--c-c);}
+/* FILTROS */
+.fs{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:12px;align-items:center;}
+.fb{padding:4px 11px;border-radius:20px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid var(--brd);background:var(--surf);color:var(--mut);transition:.15s;}
+.fb:hover,.fb.on{border-color:var(--acc);color:var(--acc);background:var(--accl);}
+.fi{flex:1;min-width:150px;padding:4px 10px;border-radius:20px;border:1px solid var(--brd);background:var(--surf);color:var(--txt);font-size:12px;outline:none;}
+.fi:focus{border-color:var(--acc);}
+.tr{font-size:10px;font-weight:700;padding:2px 6px;border-radius:4px;}
+.tr-ok{background:var(--ok-b);color:var(--ok-c);}.tr-wn{background:var(--mv-b);color:var(--mv-c);}.tr-dn{background:var(--dn-b);color:var(--dn-c);}
+/* MODALES */
+.mbg{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:500;display:none;align-items:center;justify-content:center;padding:16px;}
+.mbg.on{display:flex;}
+.modal{background:var(--surf);border-radius:var(--r);padding:20px;width:100%;max-width:540px;max-height:92vh;overflow-y:auto;}
+.mh{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.mh h2{font-size:15px;font-weight:700;}
+.mc{cursor:pointer;font-size:18px;color:var(--mut);background:none;border:none;}
+.fg{display:flex;flex-direction:column;gap:4px;margin-bottom:10px;}
+.fg label{font-size:11px;font-weight:600;color:var(--mut);}
+.fg input,.fg select{background:var(--surf2);border:1px solid var(--brd);border-radius:var(--rs);padding:7px 9px;font-size:13px;color:var(--txt);width:100%;outline:none;transition:.15s;}
+.fg input:focus,.fg select:focus{border-color:var(--acc);}
+.fgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.fspan{grid-column:1/-1;}
+.req{color:var(--dn-c);}
+.del-box{padding:7px 9px;background:var(--surf2);border:1px solid var(--brd);border-radius:var(--rs);font-size:13px;font-weight:700;color:var(--txt);}
+/* ETAPA SELECTOR */
+.esg{display:grid;grid-template-columns:repeat(auto-fit,minmax(88px,1fr));gap:7px;margin-bottom:12px;}
+.esb{background:var(--surf2);border:2px solid var(--brd);border-radius:var(--rs);padding:10px 6px;cursor:pointer;color:var(--mut);text-align:center;transition:.15s;width:100%;}
+.esb:hover{border-color:var(--acc);}
+.esb.s-a{border-color:var(--a-c);background:var(--a-b);color:var(--a-c);}.esb.s-b{border-color:var(--b-c);background:var(--b-b);color:var(--b-c);}.esb.s-c{border-color:var(--c-c);background:var(--c-b);color:var(--c-c);}.esb.s-d{border-color:var(--dn-c);background:var(--dn-b);color:var(--dn-c);}.esb.s-n{border-color:var(--ok-c);background:var(--ok-b);color:var(--ok-c);}
+.esl{font-size:16px;font-weight:800;display:block;}.esc{font-size:9px;display:block;margin-top:2px;}
+/* CHECKLIST */
+.ck-panel{display:none;background:var(--surf2);border:1px solid var(--brd);border-radius:var(--rs);padding:10px 12px;margin-bottom:12px;}
+.ck-panel.on{display:block;}
+.ck-title{font-size:11px;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px;}
+.ck-grid{display:grid;grid-template-columns:1fr 1fr;gap:2px;}
+.ck-grid label{display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;padding:3px 0;}
+/* TS BOX */
+.ts-box{background:var(--surf2);border:1px solid var(--brd);border-radius:var(--rs);padding:7px 12px;margin-bottom:12px;display:flex;align-items:center;gap:10px;}
+/* TAGS */
+.tag{display:inline-block;background:var(--mt-b);color:var(--mt-c);border-radius:4px;padding:1px 5px;font-size:10px;font-weight:600;margin:1px;}
+.rep-work{display:flex;gap:4px;flex-wrap:wrap}.rep-work .tag{margin:0 2px 2px 0}
+/* PLAN SECTION */
+.plan-fecha-lbl{font-size:11px;font-weight:700;color:var(--mut);margin-bottom:6px;text-transform:uppercase;letter-spacing:.04em;}
+/* CONFIG */
+.cfg-box{background:var(--surf2);border:1px solid var(--brd);border-radius:var(--rs);padding:12px 14px;margin-bottom:10px;}
+.cfg-box p{font-size:12px;color:var(--mut);margin-top:4px;}
+code{font-family:monospace;font-size:11px;background:var(--brd);padding:1px 5px;border-radius:3px;}
+.empty{text-align:center;padding:30px;color:var(--mut);font-size:12px;}
+
+.foto3-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px;}
+.foto3-item{display:flex;flex-direction:column;gap:4px;}
+.foto3-lbl{font-size:10px;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.04em;text-align:center;}
+.foto3-area{border:2px dashed var(--brd);border-radius:var(--rs);padding:10px 6px;text-align:center;cursor:pointer;background:var(--surf2);position:relative;min-height:80px;display:flex;align-items:center;justify-content:center;flex-direction:column;transition:.15s;}
+.foto3-area:hover{border-color:var(--acc);background:var(--accl);}
+.foto3-area.done{border-color:var(--ok-c);border-style:solid;background:var(--ok-b);}
+.foto3-area input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+.foto3-prev{width:100%;height:70px;object-fit:cover;border-radius:4px;display:none;}
+.foto3-prev.on{display:block;}
+.foto3-icon{font-size:20px;line-height:1;}
+.foto3-txt{font-size:10px;color:var(--mut);margin-top:3px;}
+.foto3-check{font-size:16px;display:none;}
+.foto3-area.done .foto3-check{display:block;}
+.foto3-area.done .foto3-icon{display:none;}
+.foto3-area.done .foto3-txt{display:none;}
+.foto3-counter{font-size:11px;font-weight:700;margin-bottom:8px;}
+.foto3-counter.ok{color:var(--ok-c);}
+.foto3-counter.pend{color:var(--mv-c);}
+.transp-btn{background:var(--surf2);border:2px solid var(--brd);border-radius:var(--rs);padding:12px 8px;cursor:pointer;color:var(--mut);text-align:center;transition:.15s;width:100%;}
+.transp-btn:hover{border-color:var(--acc);}
+.transp-btn.sel{border-color:var(--acc);background:var(--accl);color:var(--acc);}
+
+
+.foto-area{border:2px dashed var(--brd);border-radius:var(--rs);padding:16px;text-align:center;cursor:pointer;background:var(--surf2);position:relative;margin-bottom:10px;}
+.foto-area:hover{border-color:var(--acc);background:var(--accl);}
+.foto-area input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+.foto-prev{width:100%;max-height:150px;object-fit:cover;border-radius:var(--rs);margin-top:8px;display:none;}
+.foto-prev.on{display:block;}
+.thumb{width:44px;height:44px;object-fit:cover;border-radius:4px;cursor:pointer;border:2px solid var(--brd);margin:1px;}
+.thumb:hover{border-color:var(--acc);}
+.lb-bg{position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:900;display:none;align-items:center;justify-content:center;padding:20px;}
+.lb-bg.on{display:flex;}
+.lb-img{max-width:90vw;max-height:85vh;border-radius:var(--r);object-fit:contain;}
+.lb-close{position:absolute;top:14px;right:18px;color:#fff;font-size:28px;cursor:pointer;background:none;border:none;}
+.lb-cap{position:absolute;bottom:16px;left:0;right:0;text-align:center;color:#fff;font-size:13px;font-weight:600;}
+
+.toast{position:fixed;bottom:20px;right:20px;background:var(--txt);color:var(--surf);padding:9px 14px;border-radius:var(--rs);font-size:12px;z-index:999;opacity:0;transform:translateY(6px);transition:.2s;pointer-events:none;max-width:300px;}
+.toast.on{opacity:1;transform:none;}.toast.ok{background:var(--ok-c);}.toast.err{background:var(--dn-c);}.toast.warn{background:var(--mv-c);}
+.dmg-actions{display:flex;gap:6px;flex-wrap:wrap;align-items:center;}
+.dmg-note{display:inline-block;font-size:10px;color:var(--mut);margin-top:3px;max-width:230px;white-space:normal;}
+.btn-mini{padding:4px 8px;font-size:10px;border-radius:5px;}
+.sp{display:inline-block;width:12px;height:12px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:sp .6s linear infinite;}
+@keyframes sp{to{transform:rotate(360deg)}}
+
+/* LOGIN */
+.login-bg{position:fixed;inset:0;background:linear-gradient(135deg,#060f1e 0%,#091828 50%,#060f1e 100%);z-index:2000;display:none;align-items:center;justify-content:center;padding:20px;overflow:hidden;}
+.login-bg:before{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at 20% 25%,rgba(0,91,158,.3) 0%,transparent 42%),radial-gradient(ellipse at 82% 75%,rgba(15,110,86,.2) 0%,transparent 38%);pointer-events:none;}
+.login-bg:after{content:"";position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.022) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.022) 1px,transparent 1px);background-size:48px 48px;pointer-events:none;}
+.login-bg.on{display:flex;}
+.login-portal-back{position:absolute;top:18px;left:20px;z-index:20;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.13);border-radius:8px;padding:8px 14px;color:rgba(255,255,255,.6);font-size:12px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:.15s;font-family:inherit;}
+.login-portal-back:hover{background:rgba(255,255,255,.14);color:#fff;border-color:rgba(255,255,255,.26);}
+.login-card{position:relative;width:100%;max-width:400px;background:#fff;border-radius:18px;box-shadow:0 0 0 1px rgba(255,255,255,.07),0 40px 90px rgba(0,0,0,.55),0 0 80px rgba(0,91,158,.12);padding:38px 34px;z-index:1;}
+.login-top{text-align:center;margin-bottom:28px;}
+.login-logo{display:block;height:48px;width:auto;margin:0 auto 14px;}
+.login-title{font-size:21px;font-weight:900;color:#005B9E;margin-bottom:4px;}
+.login-sub{font-size:12px;color:#687386;}
+.login-fg{display:flex;flex-direction:column;gap:5px;margin-bottom:14px;}
+.login-fg label{font-size:11px;font-weight:750;color:#687386;text-transform:uppercase;letter-spacing:.04em;}
+.login-fg input,.login-fg select{width:100%;border:1.5px solid #e2e8f0;border-radius:8px;padding:11px 12px;font-size:14px;outline:none;background:#f8fafc;color:#18202a;transition:.15s;}
+.login-fg input:focus,.login-fg select:focus{border-color:#005B9E;box-shadow:0 0 0 3px rgba(0,91,158,.12);background:#fff;}
+.login-btn{width:100%;border:0;border-radius:8px;background:linear-gradient(135deg,#005B9E 0%,#0077cc 100%);color:#fff;font-weight:850;font-size:14px;padding:12px 14px;cursor:pointer;margin-top:6px;box-shadow:0 8px 22px rgba(0,91,158,.32);transition:.15s;}
+.login-btn:hover{transform:translateY(-1px);box-shadow:0 12px 28px rgba(0,91,158,.42);}
+.login-err{display:none;font-size:12px;color:#A32D2D;background:#FCEBEB;border:1px solid #f3b6b6;border-radius:7px;padding:8px 10px;margin-top:12px;}
+.login-err.on{display:block;}
+.login-help{font-size:11px;color:#9ca3af;text-align:center;margin-top:16px;}
+.login-brand{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:18px;padding-top:16px;border-top:1px solid #f0f4f8;}
+.login-brand span{font-size:10px;font-weight:700;color:#b0bec5;text-transform:uppercase;letter-spacing:.08em;}
+@media(max-width:500px){.login-card{padding:28px 20px;border-radius:14px;}.login-portal-back{top:14px;left:14px;}.brand-mag{display:none}.brand-left{min-width:0}.hdr{padding:8px 12px}.wrap{padding:14px 10px}.card{padding:13px 12px}.kgrid{grid-template-columns:repeat(2,minmax(0,1fr));}}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div class="login-bg on" id="login-bg">
+  <a class="login-portal-back" href="./index.html">← Portal Opaustro</a>
+  <form class="login-card" onsubmit="return doLogin(event)">
+    <div class="login-top">
+      <img class="login-logo" src="EMPRESA.jpeg" alt="Opaustro">
+      <div class="login-title">Control de Cabinets</div>
+      <div class="login-sub">Inventario, taller y movimientos de cabinets Magnum</div>
+    </div>
+    <div class="login-fg">
+      <label for="login-user">Usuario</label>
+      <select id="login-user" autocomplete="username" required><option value="">Seleccionar usuario...</option></select>
+    </div>
+    <div class="login-fg">
+      <label for="login-pass">Contraseña</label>
+      <input id="login-pass" type="password" autocomplete="current-password" required placeholder="••••••">
+    </div>
+    <button class="login-btn" type="submit">Ingresar</button>
+    <div class="login-err" id="login-err">Usuario o contraseña incorrectos.</div>
+    <div class="login-help">Sesión privada para personal autorizado</div>
+    <div class="login-brand"><span>Línea Magnum · Operación Opaustro</span></div>
+  </form>
+</div>
+
+<div class="hdr">
+  <div class="brand-left">
+    <div class="brand-logos">
+      <img class="brand-opa" src="EMPRESA.jpeg" alt="Opaustro">
+      <div class="brand-sep"></div>
+      <img class="brand-mag" src="magnum.avif" alt="Magnum">
+    </div>
+    <div>
+      <div style="font-size:15px;font-weight:800;">Control de Cabinets</div>
+      <div style="font-size:11px;color:var(--mut);">Opaustro Cía. Ltda. · Magnum</div>
+    </div>
+  </div>
+  <div class="sync-row">
+    <span class="slbl" id="slbl"><span class="dot"></span>Cargando...</span>
+    <button class="btn" onclick="loadData()">↻ Sync</button>
+    <button class="btn btn-sal role-admin role-tecnico" onclick="openModalSal()">📅 Planificar salida</button>
+    <button class="btn btn-cap role-admin role-tecnico" onclick="openModalCap()">↓ Entrada</button>
+    <a class="btn" href="./index.html" style="text-decoration:none;">← Portal</a>
+    <button class="btn" onclick="logoutApp()">⏻ Salir</button>
+  </div>
+</div>
+
+<div class="nav">
+  <button class="nt on pane-tab pane-res" onclick="showPane('res',this)">📊 Resumen</button>
+  <button class="nt pane-tab pane-bod"    onclick="showPane('bod',this)">🏭 Bodega</button>
+  <button class="nt pane-tab pane-mnt"    onclick="showPane('mnt',this)">🔧 Mantenimiento</button>
+  <button class="nt pane-tab pane-rep"    onclick="showPane('rep',this)">📈 Reporte taller</button>
+  <button class="nt pane-tab pane-mov"    onclick="showPane('mov',this)">🚚 Movimientos</button>
+  <button class="nt pane-tab pane-plan"    onclick="showPane('plan',this)">📅 Planificación</button>
+</div>
+
+<div class="wrap">
+
+<!-- RESUMEN -->
+<div id="pane-res" class="pane on">
+  <div class="alert-plan" id="alert-plan">
+    <div class="ico">⚠️</div>
+    <div class="msg"><strong id="alert-plan-title">Entregas pendientes</strong><p id="alert-plan-msg"></p></div>
+    <button class="btn" onclick="showPane('plan',document.querySelectorAll('.nt')[4])">Ver planificación →</button>
+  </div>
+  <div class="kgrid">
+    <div class="kcard kclick" role="button" tabindex="0" onclick="abrirKpi('bod','OK')" onkeydown="teclaKpi(event,'bod','OK')"><div class="klbl">Bodega OK</div><div class="kval" id="k-ok" style="color:var(--ok-c);">—</div><div class="ksub">disponibles</div></div>
+    <div class="kcard kclick" role="button" tabindex="0" onclick="abrirKpi('bod','MERCADO')" onkeydown="teclaKpi(event,'bod','MERCADO')"><div class="klbl">En mercado</div><div class="kval" id="k-mv" style="color:var(--mv-c);">—</div><div class="ksub">colocados</div></div>
+    <div class="kcard kclick" role="button" tabindex="0" onclick="abrirKpi('mnt','TODOS')" onkeydown="teclaKpi(event,'mnt','TODOS')"><div class="klbl">Mantenimiento</div><div class="kval" id="k-mt" style="color:var(--mt-c);">—</div><div class="ksub">etapas A·B·C</div></div>
+    <div class="kcard kclick" role="button" tabindex="0" onclick="abrirKpi('bod','DAÑADO')" onkeydown="teclaKpi(event,'bod','DAÑADO')"><div class="klbl">Dañados</div><div class="kval" id="k-dn" style="color:var(--dn-c);">—</div><div class="ksub">sin reparación</div></div>
+    <div class="kcard kclick" role="button" tabindex="0" onclick="abrirKpi('plan','HOY')" onkeydown="teclaKpi(event,'plan','HOY')"><div class="klbl">Plan hoy</div><div class="kval" id="k-ph" style="color:var(--pl-c);">—</div><div class="ksub">entregas planificadas</div></div>
+  </div>
+  <div class="g2">
+    <div class="card">
+      <div class="ch"><span class="ct">Últimos movimientos</span><span class="cc" id="cc-um"></span></div>
+      <div class="tw"><table><thead><tr><th>Fecha/hora</th><th>Tipo</th><th>Placa</th><th>Modelo</th><th>Cliente</th></tr></thead><tbody id="tb-um"></tbody></table></div>
+    </div>
+    <div class="card">
+      <div class="ch"><span class="ct">Entregas de hoy / próximas</span><span class="cc" id="cc-plan-res"></span></div>
+      <div class="tw"><table><thead><tr><th>Fecha plan.</th><th>Placa</th><th>Modelo</th><th>Cód. cliente</th><th>Cliente</th><th>Estado</th></tr></thead><tbody id="tb-plan-res"></tbody></table></div>
+    </div>
+  </div>
+</div>
+
+<!-- BODEGA -->
+<div id="pane-bod" class="pane">
+  <div class="card">
+    <div class="ch">
+      <span class="ct">Stock en bodega</span>
+      <div style="display:flex;gap:7px;align-items:center;"><span class="cc" id="cc-bo"></span><button class="btn btn-acc role-admin role-tecnico" onclick="expCSV()">↓ Exportar Excel</button></div>
+    </div>
+    <div class="fs">
+      <button id="fb-bo-todos" class="fb on" onclick="fBo('TODOS',this)">Todos</button>
+      <button id="fb-bo-ok" class="fb" onclick="fBo('OK',this)">OK</button>
+      <button id="fb-bo-a" class="fb" onclick="fBo('A',this)">Etapa A</button>
+      <button id="fb-bo-b" class="fb" onclick="fBo('B',this)">Etapa B</button>
+      <button id="fb-bo-c" class="fb" onclick="fBo('C',this)">Etapa C</button>
+      <button id="fb-bo-dn" class="fb" onclick="fBo('DAÑADO',this)">Dañados</button>
+      <input class="fi" placeholder="Buscar placa, modelo, cliente..." oninput="sBo(this.value)">
+    </div>
+    <div class="tw"><table><thead><tr><th>Placa</th><th>Modelo</th><th>Estado</th><th>Etapa / Trabajos</th><th>Días</th><th>Tiempo en bodega</th><th>Cliente</th><th>Fotos</th><th>Acción</th></tr></thead><tbody id="tb-bo"></tbody></table></div>
+  </div>
+</div>
+
+<!-- MANTENIMIENTO -->
+<div id="pane-mnt" class="pane">
+  <div class="ecards">
+    <div class="ecard ec-a"><div class="el">Etapa A</div><div class="ev" id="e-a">—</div><div class="ed">Limpieza · Etiquetas</div></div>
+    <div class="ecard ec-b"><div class="el">Etapa B</div><div class="ev" id="e-b">—</div><div class="ed">Repuestos · Termostato</div></div>
+    <div class="ecard ec-c"><div class="el">Etapa C</div><div class="ev" id="e-c">—</div><div class="ed">Ruedas · Felpas · Completo</div></div>
+  </div>
+  <div class="card">
+    <div class="ch"><span class="ct">Equipos en mantenimiento</span><span class="cc" id="cc-mt"></span></div>
+    <div class="fs">
+      <button class="fb on" onclick="fMt('TODOS',this)">Todos</button>
+      <button class="fb" onclick="fMt('A',this)">Etapa A</button>
+      <button class="fb" onclick="fMt('B',this)">Etapa B</button>
+      <button class="fb" onclick="fMt('C',this)">Etapa C</button>
+      <input class="fi" placeholder="Buscar placa..." oninput="sMt(this.value)">
+    </div>
+    <div class="tw"><table><thead><tr><th>Placa</th><th>Modelo</th><th>Etapa</th><th>Ingresó</th><th>Días</th><th>Trabajos</th><th>Foto entrada</th><th>Acción</th></tr></thead><tbody id="tb-mt"></tbody></table></div>
+  </div>
+</div>
+
+
+<!-- REPORTE TALLER -->
+<div id="pane-rep" class="pane">
+  <div class="kgrid">
+    <div class="kcard"><div class="klbl">Terminados</div><div class="kval" id="rp-total" style="color:var(--ok-c);">—</div><div class="ksub">equipos finalizados</div></div>
+    <div class="kcard"><div class="klbl">Promedio taller</div><div class="kval" id="rp-prom" style="color:var(--mt-c);">—</div><div class="ksub">tiempo por equipo</div></div>
+    <div class="kcard"><div class="klbl">Mas demorado</div><div class="kval" id="rp-max" style="color:var(--mv-c);">—</div><div class="ksub" id="rp-max-p">placa</div></div>
+    <div class="kcard"><div class="klbl">Etapa mas usada</div><div class="kval" id="rp-etapa" style="color:var(--c-c);">—</div><div class="ksub">A / B / C</div></div>
+  </div>
+  <div class="card">
+    <div class="ch"><span class="ct">Historial de taller</span><span class="cc" id="cc-rep"></span></div>
+    <div class="fs">
+      <button class="fb on" onclick="fRep('TODOS',this)">Todos</button>
+      <button class="fb" onclick="fRep('A',this)">Etapa A</button>
+      <button class="fb" onclick="fRep('B',this)">Etapa B</button>
+      <button class="fb" onclick="fRep('C',this)">Etapa C</button>
+      <input class="fi" placeholder="Buscar placa, trabajo..." oninput="sRep(this.value)">
+    </div>
+    <div class="tw"><table><thead><tr><th>Placa</th><th>Modelo</th><th>Etapa</th><th>Ingreso</th><th>Salida</th><th>Dias</th><th>Trabajos</th></tr></thead><tbody id="tb-rep"></tbody></table></div>
+  </div>
+</div>
+<!-- MOVIMIENTOS / EN MERCADO -->
+<div id="pane-mov" class="pane">
+  <div class="kgrid" style="margin-bottom:16px;">
+    <div class="kcard"><div class="klbl">En mercado</div><div class="kval" id="mv-k-mer" style="color:var(--mv-c);">—</div><div class="ksub">actualmente colocados</div></div>
+    <div class="kcard"><div class="klbl">Despachados hoy</div><div class="kval" id="mv-k-hoy" style="color:var(--ok-c);">—</div><div class="ksub">salidas del día</div></div>
+    <div class="kcard"><div class="klbl">Este mes</div><div class="kval" id="mv-k-mes" style="color:var(--mt-c);">—</div><div class="ksub">captaciones del mes</div></div>
+    <div class="kcard"><div class="klbl">Con contrato</div><div class="kval" id="mv-k-contrato" style="color:var(--c-c);">—</div><div class="ksub">fotos registradas</div></div>
+  </div>
+  <div class="card">
+    <div class="ch">
+      <span class="ct">📦 Equipos captados — detalle por cliente</span>
+      <div style="display:flex;gap:7px;flex-wrap:wrap;">
+        <span class="cc" id="cc-mv"></span>
+      </div>
+    </div>
+    <div class="fs">
+      <button class="fb on" onclick="fMv('TODOS',this)">Todos</button>
+      <button class="fb" onclick="fMv('MERCADO',this)">En mercado</button>
+      <button class="fb" onclick="fMv('RETORNADO',this)">Retornados</button>
+      <input class="fi" placeholder="Buscar placa, cliente, cód..." oninput="sMv(this.value)">
+    </div>
+    <div class="tw"><table><thead><tr><th>Fecha despacho</th><th>Placa</th><th>Modelo</th><th>Cód. cliente</th><th>Cliente</th><th>Transporte</th><th>Estado actual</th><th>Contrato</th></tr></thead><tbody id="tb-mv"></tbody></table></div>
+  </div>
+</div>
+
+<!-- PLANIFICACION -->
+<div id="pane-plan" class="pane">
+  <div class="card">
+    <div class="ch">
+      <span class="ct">📅 Planificación de entregas</span>
+      <div style="display:flex;gap:7px;align-items:center;">
+        <span class="cc" id="cc-plan"></span>
+        <button class="btn btn-sal role-admin role-tecnico" onclick="openModalSal()">+ Planificar salida</button>
+      </div>
+    </div>
+    <div class="fs">
+      <button class="fb on" onclick="fPl('TODAS',this)">Todas</button>
+      <button class="fb" onclick="fPl('HOY',this)">Hoy</button>
+      <button class="fb" onclick="fPl('PROXIMAS',this)">Próximas 7 días</button>
+      <button class="fb" onclick="fPl('VENCIDAS',this)">Vencidas</button>
+      <input class="fi" placeholder="Buscar placa, cliente..." oninput="sPl(this.value)">
+    </div>
+    <div class="tw"><table><thead><tr><th>Fecha planif.</th><th>Estado</th><th>Placa</th><th>Modelo</th><th>Cód. cliente</th><th>Cliente</th><th>Transporte</th><th>Registrado</th><th>Acción</th></tr></thead><tbody id="tb-plan"></tbody></table></div>
+  </div>
+</div>
+
+</div><!-- /wrap -->
+
+<!-- MODAL PLANIFICAR SALIDA -->
+<div class="mbg" id="modal-sal">
+  <div class="modal">
+    <div class="mh"><h2>📅 Planificar salida</h2><button class="mc" onclick="closeSal()">✕</button></div>
+    <p style="font-size:11px;color:var(--mut);margin-bottom:12px;">Reserva un equipo de Bodega OK. La captación se registrará cuando pulses Despachar.</p>
+    <div class="fgrid">
+      <div class="fg"><label>Placa <span class="req">*</span></label><input type="text" id="s-placa" list="s-placas-ok" placeholder="Buscar placa OK..." oninput="syncSalidaPlaca()" style="text-transform:uppercase;font-weight:700;font-family:monospace;"><datalist id="s-placas-ok"></datalist></div>
+      <div class="fg"><label>Modelo <span class="req">*</span></label><select id="s-mod"><option value="">Seleccionar...</option>
+<option value="UDD-300">UDD-300</option>
+<option value="UDD-600">UDD-600</option>
+<option value="VITRINA PEQUEÑA">VITRINA PEQUEÑA</option>
+<option value="RIO">RIO</option>
+<option value="UDD-200">UDD-200</option>
+<option value="UDD-400">UDD-400</option>
+<option value="UDD-500">UDD-500</option>
+<option value="DOUBLE DECKER">DOUBLE DECKER</option>
+<option value="CONERA">CONERA</option>
+<option value="VITRINA GRANDE">VITRINA GRANDE</option>
+<option value="VITRINA DOBLE PUERTA">VITRINA DOBLE PUERTA</option></select></div>
+      <div class="fg"><label>Código cliente <span class="req">*</span></label><input type="text" id="s-codcli" placeholder="Cód. numérico" style="font-family:monospace;font-weight:700;"></div>
+      <div class="fg"><label>Nombre cliente <span class="req">*</span></label><input type="text" id="s-nomcli" placeholder="Nombre del cliente"></div>
+      <div class="fg fspan">
+        <label>¿Quién lleva? <span class="req">*</span></label>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          <button type="button" class="transp-btn" id="btn-alq" onclick="selTransp('CAMIONETA ALQUILADA',this)">
+            <span style="font-size:18px;">🚐</span><br>
+            <span style="font-size:12px;font-weight:700;">Camioneta alquilada</span>
+          </button>
+          <button type="button" class="transp-btn" id="btn-opa" onclick="selTransp('CAMION OPAUSTRO',this)">
+            <span style="font-size:18px;">🚛</span><br>
+            <span style="font-size:12px;font-weight:700;">Camión Opaustro</span>
+          </button>
+        </div>
+        <input type="hidden" id="s-del" value="">
+      </div>
+    </div>
+    <!-- PLANIFICACION -->
+    <div style="background:var(--pl-b);border:1px solid var(--pl-c);border-radius:var(--rs);padding:10px 12px;margin-bottom:12px;">
+      <div class="plan-fecha-lbl">📅 Fecha planificada de entrega</div>
+      <div class="fgrid" style="margin-bottom:0;grid-template-columns:1fr;">
+        <div class="fg" style="margin-bottom:0;"><label>Fecha de entrega <span class="req">*</span></label><input type="date" id="s-fecha-plan"></div>
+      </div>
+    </div>
+    <div class="ts-box">
+      <span style="font-size:18px;">🕐</span>
+      <div><div style="font-size:10px;color:var(--mut);font-weight:600;">Fecha y hora de planificación</div><div style="font-size:13px;font-weight:700;" id="ts-sal">—</div></div>
+    </div>
+    <div style="display:flex;gap:8px;">
+      <button class="btn btn-sal" onclick="saveSal()" id="btn-sal" style="flex:1;">📅 Guardar planificación</button>
+      <button class="btn" onclick="closeSal()">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL ENTRADA -->
+<div class="mbg" id="modal-cap">
+  <div class="modal">
+    <div class="mh"><h2>↓ Entrada de equipo</h2><button class="mc" onclick="closeCap()">✕</button></div>
+    <p style="font-size:11px;color:var(--mut);margin-bottom:12px;">Equipo que regresa del mercado o ingresa nuevo. Fecha/hora automática.</p>
+    <div style="margin-bottom:12px;">
+      <div style="font-size:11px;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">¿A qué estado ingresa? <span class="req">*</span></div>
+      <div class="esg">
+        <button class="esb" onclick="selEt('A',this)"><span class="esl">A</span><span class="esc">Limpieza / Etiquetas</span></button>
+        <button class="esb" onclick="selEt('B',this)"><span class="esl">B</span><span class="esc">Repuestos</span></button>
+        <button class="esb" onclick="selEt('C',this)"><span class="esl">C</span><span class="esc">Completo</span></button>
+        <button class="esb" onclick="selEt('DAÑADO',this)"><span class="esl" style="font-size:12px;">Dañado</span><span class="esc">Sin reparación</span></button>
+        <button class="esb" onclick="selEt('NUEVO',this)"><span class="esl" style="font-size:12px;">Nuevo</span><span class="esc">Equipo nuevo</span></button>
+      </div>
+    </div>
+    <div class="ck-panel" id="ck-a">
+      <div class="ck-title">Trabajos Etapa A</div>
+      <div class="ck-grid"><label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;padding:3px 0;"><input type="checkbox" id="ca_LIMPIEZA_TOTAL" value="LIMPIEZA TOTAL"> LIMPIEZA TOTAL</label>
+<label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;padding:3px 0;"><input type="checkbox" id="ca_ETIQUETAS___BRANDEO" value="ETIQUETAS / BRANDEO"> ETIQUETAS / BRANDEO</label>
+<label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;padding:3px 0;"><input type="checkbox" id="ca_PINTURA_DE_EQUIPO" value="PINTURA DE EQUIPO"> PINTURA DE EQUIPO</label>
+</div>
+    </div>
+    <div class="ck-panel" id="ck-b">
+      <div class="ck-title">Trabajos Etapa B</div>
+      <div class="ck-grid"><label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;padding:3px 0;"><input type="checkbox" id="cb_CAMBIO_DE_TERMOSTATO" value="CAMBIO DE TERMOSTATO"> CAMBIO DE TERMOSTATO</label>
+<label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;padding:3px 0;"><input type="checkbox" id="cb_DAÑO_DE_VENTILADOR" value="DAÑO DE VENTILADOR"> DAÑO DE VENTILADOR</label>
+<label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;padding:3px 0;"><input type="checkbox" id="cb_CAMBIO_DE_ENCHUFES" value="CAMBIO DE ENCHUFES"> CAMBIO DE ENCHUFES</label>
+<label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;padding:3px 0;"><input type="checkbox" id="cb_CAMBIO_DE_CANASTILLAS" value="CAMBIO DE CANASTILLAS"> CAMBIO DE CANASTILLAS</label>
+<label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;padding:3px 0;"><input type="checkbox" id="cb_PINTURA_DE_CANASTILLAS" value="PINTURA DE CANASTILLAS"> PINTURA DE CANASTILLAS</label>
+<label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;padding:3px 0;"><input type="checkbox" id="cb_CAMBIO_DE_CHAPAS" value="CAMBIO DE CHAPAS"> CAMBIO DE CHAPAS</label>
+<label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;padding:3px 0;"><input type="checkbox" id="cb_VIDRIOS_DAÑADOS" value="VIDRIOS DAÑADOS"> VIDRIOS DAÑADOS</label>
+<label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;padding:3px 0;"><input type="checkbox" id="cb_CAMBIO_DE_VISAGRAS_VITRINAS" value="CAMBIO DE VISAGRAS (VITRINAS)"> CAMBIO DE VISAGRAS (VITRINAS)</label>
+</div>
+    </div>
+    <div class="ck-panel" id="ck-c">
+      <div class="ck-title">Trabajos Etapa C</div>
+      <div class="ck-grid"><label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;padding:3px 0;"><input type="checkbox" id="cc_CAMBIO_DE_RUEDAS" value="CAMBIO DE RUEDAS"> CAMBIO DE RUEDAS</label>
+<label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;padding:3px 0;"><input type="checkbox" id="cc_CAMBIO_DE_FELPAS" value="CAMBIO DE FELPAS"> CAMBIO DE FELPAS</label>
+<label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;padding:3px 0;"><input type="checkbox" id="cc_LIMPIEZA_TOTAL" value="LIMPIEZA TOTAL"> LIMPIEZA TOTAL</label>
+<label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;padding:3px 0;"><input type="checkbox" id="cc_ETIQUETAS___BRANDEO" value="ETIQUETAS / BRANDEO"> ETIQUETAS / BRANDEO</label>
+<label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;padding:3px 0;"><input type="checkbox" id="cc_PINTURA_DE_EQUIPO" value="PINTURA DE EQUIPO"> PINTURA DE EQUIPO</label>
+<label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;padding:3px 0;"><input type="checkbox" id="cc_CAMBIO_DE_TERMOSTATO" value="CAMBIO DE TERMOSTATO"> CAMBIO DE TERMOSTATO</label>
+<label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;padding:3px 0;"><input type="checkbox" id="cc_DAÑO_DE_VENTILADOR" value="DAÑO DE VENTILADOR"> DAÑO DE VENTILADOR</label>
+<label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;padding:3px 0;"><input type="checkbox" id="cc_CAMBIO_DE_ENCHUFES" value="CAMBIO DE ENCHUFES"> CAMBIO DE ENCHUFES</label>
+<label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;padding:3px 0;"><input type="checkbox" id="cc_CAMBIO_DE_CANASTILLAS" value="CAMBIO DE CANASTILLAS"> CAMBIO DE CANASTILLAS</label>
+<label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;padding:3px 0;"><input type="checkbox" id="cc_PINTURA_DE_CANASTILLAS" value="PINTURA DE CANASTILLAS"> PINTURA DE CANASTILLAS</label>
+<label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;padding:3px 0;"><input type="checkbox" id="cc_CAMBIO_DE_CHAPAS" value="CAMBIO DE CHAPAS"> CAMBIO DE CHAPAS</label>
+<label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;padding:3px 0;"><input type="checkbox" id="cc_VIDRIOS_DAÑADOS" value="VIDRIOS DAÑADOS"> VIDRIOS DAÑADOS</label>
+<label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;padding:3px 0;"><input type="checkbox" id="cc_CAMBIO_DE_VISAGRAS_VITRINAS" value="CAMBIO DE VISAGRAS (VITRINAS)"> CAMBIO DE VISAGRAS (VITRINAS)</label>
+</div>
+    </div>
+    <div class="fgrid">
+      <div class="fg"><label>Placa <span class="req">*</span></label><input type="text" id="c-placa" placeholder="Ej: 70391" style="text-transform:uppercase;font-weight:700;font-family:monospace;"></div>
+      <div class="fg"><label>Modelo <span class="req">*</span></label><select id="c-mod"><option value="">Seleccionar...</option>
+<option value="UDD-300">UDD-300</option>
+<option value="UDD-600">UDD-600</option>
+<option value="VITRINA PEQUEÑA">VITRINA PEQUEÑA</option>
+<option value="RIO">RIO</option>
+<option value="UDD-200">UDD-200</option>
+<option value="UDD-400">UDD-400</option>
+<option value="UDD-500">UDD-500</option>
+<option value="DOUBLE DECKER">DOUBLE DECKER</option>
+<option value="CONERA">CONERA</option>
+<option value="VITRINA GRANDE">VITRINA GRANDE</option>
+<option value="VITRINA DOBLE PUERTA">VITRINA DOBLE PUERTA</option></select></div>
+      <div class="fg fspan">
+        <label>Delegado</label>
+        <div class="del-box">MANUEL GUAMAN</div>
+        <input type="hidden" id="c-del" value="MANUEL GUAMAN">
+      </div>
+
+    </div>
+    <div class="fg fspan" id="cap-fotos-box">
+      <label>📷 Fotos de entrada — cómo llegó el equipo <span class="req">*</span> <span style="color:var(--mut);font-weight:400;">(3 fotos obligatorias)</span></label>
+      <div class="foto3-counter pend" id="ce-cnt">0 / 4 fotos tomadas</div>
+      <div class="foto3-grid" style="grid-template-columns:1fr 1fr 1fr 1fr;">
+        <div class="foto3-item">
+          <div class="foto3-lbl">📸 Frontal</div>
+          <div class="foto3-area" id="ce-area-f" onclick="document.getElementById('ce-inp-f').click()">
+            <input type="file" id="ce-inp-f" accept="image/jpeg,image/png,image/*" capture="environment">
+            <img class="foto3-prev" id="ce-prev-f" src="" alt="">
+            <div class="foto3-icon">📷</div>
+            <div class="foto3-txt">Frente</div>
+            <div class="foto3-check">✅</div>
+          </div>
+        </div>
+        <div class="foto3-item">
+          <div class="foto3-lbl">📸 Trasera</div>
+          <div class="foto3-area" id="ce-area-t" onclick="document.getElementById('ce-inp-t').click()">
+            <input type="file" id="ce-inp-t" accept="image/jpeg,image/png,image/*" capture="environment">
+            <img class="foto3-prev" id="ce-prev-t" src="" alt="">
+            <div class="foto3-icon">📷</div>
+            <div class="foto3-txt">Atrás</div>
+            <div class="foto3-check">✅</div>
+          </div>
+        </div>
+        <div class="foto3-item">
+          <div class="foto3-lbl">📸 Interior</div>
+          <div class="foto3-area" id="ce-area-i" onclick="document.getElementById('ce-inp-i').click()">
+            <input type="file" id="ce-inp-i" accept="image/jpeg,image/png,image/*" capture="environment">
+            <img class="foto3-prev" id="ce-prev-i" src="" alt="">
+            <div class="foto3-icon">📷</div>
+            <div class="foto3-txt">Interior</div>
+            <div class="foto3-check">✅</div>
+          </div>
+        </div>
+        <div class="foto3-item">
+          <div class="foto3-lbl">📸 Placa</div>
+          <div class="foto3-area" id="ce-area-p" onclick="document.getElementById('ce-inp-p').click()">
+            <input type="file" id="ce-inp-p" accept="image/jpeg,image/png,image/*" capture="environment">
+            <img class="foto3-prev" id="ce-prev-p" src="" alt="">
+            <div class="foto3-icon">📷</div>
+            <div class="foto3-txt">Placa</div>
+            <div class="foto3-check">✅</div>
+          </div>
+        </div>
+      </div>
+      <input type="hidden" id="ce-foto-f">
+      <input type="hidden" id="ce-foto-t">
+      <input type="hidden" id="ce-foto-i">
+      <input type="hidden" id="ce-foto-p">
+    </div>
+    <div class="ts-box">
+      <span style="font-size:18px;">🕐</span>
+      <div><div style="font-size:10px;color:var(--mut);font-weight:600;">Fecha y hora de entrada (automática)</div><div style="font-size:13px;font-weight:700;" id="ts-cap">—</div></div>
+    </div>
+    <div style="display:flex;gap:8px;">
+      <button class="btn btn-cap" onclick="saveCap()" id="btn-cap" style="flex:1;">↓ Registrar entrada</button>
+      <button class="btn" onclick="closeCap()">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<div class="mbg" id="modal-listo">
+  <div class="modal">
+    <div class="mh"><h2>✓ Equipo listo</h2><button class="mc" onclick="g('modal-listo').classList.remove('on')">✕</button></div>
+    <p style="font-size:11px;color:var(--mut);margin-bottom:10px;">Toma la foto del equipo terminado para confirmar la salida del taller.</p>
+    <input type="hidden" id="ml-placa">
+    <div style="background:var(--surf2);border:1px solid var(--brd);border-radius:var(--rs);padding:8px 12px;margin-bottom:12px;font-size:12px;">
+      <strong>Placa:</strong> <span id="ml-placa-show" style="font-family:monospace;color:var(--acc);font-weight:700;"></span>
+      &nbsp; <strong>Etapa:</strong> <span id="ml-etapa-show"></span>
+    </div>
+    <div class="fg fspan">
+      <label>📷 Fotos de salida del taller — cómo quedó <span class="req">*</span> <span style="color:var(--mut);font-weight:400;">(3 fotos obligatorias)</span></label>
+      <div class="foto3-counter pend" id="ml-cnt">0 / 3 fotos tomadas</div>
+      <div class="foto3-grid">
+        <div class="foto3-item">
+          <div class="foto3-lbl">📸 Frontal</div>
+          <div class="foto3-area" id="ml-area-f" onclick="document.getElementById('ml-inp-f').click()">
+            <input type="file" id="ml-inp-f" accept="image/jpeg,image/png,image/*" capture="environment">
+            <img class="foto3-prev" id="ml-prev-f" src="" alt="">
+            <div class="foto3-icon">📷</div>
+            <div class="foto3-txt">Frente</div>
+            <div class="foto3-check">✅</div>
+          </div>
+        </div>
+        <div class="foto3-item">
+          <div class="foto3-lbl">📸 Trasera</div>
+          <div class="foto3-area" id="ml-area-t" onclick="document.getElementById('ml-inp-t').click()">
+            <input type="file" id="ml-inp-t" accept="image/jpeg,image/png,image/*" capture="environment">
+            <img class="foto3-prev" id="ml-prev-t" src="" alt="">
+            <div class="foto3-icon">📷</div>
+            <div class="foto3-txt">Atrás</div>
+            <div class="foto3-check">✅</div>
+          </div>
+        </div>
+        <div class="foto3-item">
+          <div class="foto3-lbl">📸 Interior</div>
+          <div class="foto3-area" id="ml-area-i" onclick="document.getElementById('ml-inp-i').click()">
+            <input type="file" id="ml-inp-i" accept="image/jpeg,image/png,image/*" capture="environment">
+            <img class="foto3-prev" id="ml-prev-i" src="" alt="">
+            <div class="foto3-icon">📷</div>
+            <div class="foto3-txt">Interior</div>
+            <div class="foto3-check">✅</div>
+          </div>
+        </div>
+      </div>
+      <input type="hidden" id="ml-foto-f">
+      <input type="hidden" id="ml-foto-t">
+      <input type="hidden" id="ml-foto-i">
+    </div>
+    <div style="display:flex;gap:8px;">
+      <button class="btn btn-ok" onclick="confirmarListo()" id="btn-ml" style="flex:1;">✓ Confirmar — pasar a bodega OK</button>
+      <button class="btn" onclick="g('modal-listo').classList.remove('on')">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<div class="mbg" id="modal-fotok">
+  <div class="modal">
+    <div class="mh"><h2>📷 Fotos del equipo</h2><button class="mc" onclick="g('modal-fotok').classList.remove('on')">✕</button></div>
+    <p style="font-size:11px;color:var(--mut);margin-bottom:10px;">Actualiza o sube las fotos del equipo en bodega. Toca cada recuadro para tomar/cambiar la foto.</p>
+    <input type="hidden" id="fk-placa">
+    <div style="background:var(--surf2);border:1px solid var(--brd);border-radius:var(--rs);padding:8px 12px;margin-bottom:12px;font-size:12px;">
+      <strong>Placa:</strong> <span id="fk-placa-show" style="font-family:monospace;color:var(--acc);font-weight:700;"></span>
+      &nbsp; <strong>Modelo:</strong> <span id="fk-mod-show"></span>
+    </div>
+    <div class="fg fspan">
+      <label>📷 Fotos del equipo <span style="color:var(--mut);font-weight:400;">(opcionales)</span></label>
+      <div class="foto3-counter pend" id="fk-cnt">0 / 3 fotos tomadas</div>
+      <div class="foto3-grid">
+        <div class="foto3-item">
+          <div class="foto3-lbl">📸 Frontal</div>
+          <div class="foto3-area" id="fk-area-f" onclick="document.getElementById('fk-inp-f').click()">
+            <input type="file" id="fk-inp-f" accept="image/jpeg,image/png,image/*" capture="environment">
+            <img class="foto3-prev" id="fk-prev-f" src="" alt="">
+            <div class="foto3-icon">📷</div>
+            <div class="foto3-txt">Frente</div>
+            <div class="foto3-check">✅</div>
+          </div>
+        </div>
+        <div class="foto3-item">
+          <div class="foto3-lbl">📸 Trasera</div>
+          <div class="foto3-area" id="fk-area-t" onclick="document.getElementById('fk-inp-t').click()">
+            <input type="file" id="fk-inp-t" accept="image/jpeg,image/png,image/*" capture="environment">
+            <img class="foto3-prev" id="fk-prev-t" src="" alt="">
+            <div class="foto3-icon">📷</div>
+            <div class="foto3-txt">Atrás</div>
+            <div class="foto3-check">✅</div>
+          </div>
+        </div>
+        <div class="foto3-item">
+          <div class="foto3-lbl">📸 Interior</div>
+          <div class="foto3-area" id="fk-area-i" onclick="document.getElementById('fk-inp-i').click()">
+            <input type="file" id="fk-inp-i" accept="image/jpeg,image/png,image/*" capture="environment">
+            <img class="foto3-prev" id="fk-prev-i" src="" alt="">
+            <div class="foto3-icon">📷</div>
+            <div class="foto3-txt">Interior</div>
+            <div class="foto3-check">✅</div>
+          </div>
+        </div>
+      </div>
+      <input type="hidden" id="fk-foto-f">
+      <input type="hidden" id="fk-foto-t">
+      <input type="hidden" id="fk-foto-i">
+    </div>
+    <div style="display:flex;gap:8px;">
+      <button class="btn btn-ok" onclick="guardarFotosOK()" id="btn-fk" style="flex:1;">💾 Guardar fotos</button>
+      <button class="btn" onclick="g('modal-fotok').classList.remove('on')">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<div class="mbg" id="modal-res-danado">
+  <div class="modal" style="max-width:430px;">
+    <div class="mh"><h2>Salida de equipo dañado</h2><button class="mc" onclick="closeResolverDanado()">✕</button></div>
+    <input type="hidden" id="rd-placa">
+    <div style="background:var(--surf2);border:1px solid var(--brd);border-radius:var(--rs);padding:10px 12px;margin-bottom:12px;font-size:12px;">
+      <strong>Placa:</strong> <span id="rd-placa-show" style="font-family:monospace;color:var(--acc);font-weight:700;"></span><br>
+      <span id="rd-obs-show" style="color:var(--mut);font-size:11px;"></span>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+      <button class="btn btn-ok" style="padding:14px 10px;" onclick="resolverDanadoArreglo()">Arreglado</button>
+      <button class="btn" style="padding:14px 10px;background:var(--dn-b);color:var(--dn-c);border-color:var(--dn-c);" onclick="resolverDanadoNoArreglo()">No hay arreglo</button>
+    </div>
+  </div>
+</div>
+<!-- MODAL CORREGIR ETAPA -->
+<div class="mbg" id="modal-corr-etapa">
+  <div class="modal" style="max-width:440px;">
+    <div class="mh"><h2>✎ Corregir etapa</h2><button class="mc" onclick="closeCorrEtapa()">✕</button></div>
+    <input type="hidden" id="cor-placa">
+    <p style="font-size:11px;color:var(--mut);margin-bottom:10px;">Usa esto solo si la etapa se registró por error. Selecciona la etapa correcta.</p>
+    <div style="background:var(--surf2);border:1px solid var(--brd);border-radius:var(--rs);padding:10px 12px;margin-bottom:12px;font-size:12px;">
+      <strong>Placa:</strong> <span id="cor-placa-show" style="font-family:monospace;color:var(--acc);font-weight:700;"></span>
+      &nbsp;·&nbsp; <strong>Etapa actual:</strong> <span id="cor-actual-show"></span>
+    </div>
+    <div class="esg" style="grid-template-columns:repeat(4,1fr);">
+      <button class="esb" id="cor-et-A" onclick="selCorrEt('A',this)"><span class="esl">A</span><span class="esc">Limpieza / Etiquetas</span></button>
+      <button class="esb" id="cor-et-B" onclick="selCorrEt('B',this)"><span class="esl">B</span><span class="esc">Repuestos</span></button>
+      <button class="esb" id="cor-et-C" onclick="selCorrEt('C',this)"><span class="esl">C</span><span class="esc">Completo</span></button>
+      <button class="esb" id="cor-et-D" onclick="selCorrEt('DAÑADO',this)"><span class="esl" style="font-size:12px;">Dañado</span><span class="esc">Sale de mant.</span></button>
+    </div>
+    <p id="cor-warn-dan" style="display:none;font-size:11px;color:var(--dn-c);background:var(--dn-b);border:1px solid var(--dn-c);border-radius:var(--rs);padding:7px 9px;margin-bottom:12px;">⚠ El equipo saldrá de Mantenimiento y quedará marcado como Dañado.</p>
+    <div style="display:flex;gap:8px;">
+      <button class="btn btn-ok" id="btn-cor-et" onclick="confirmarCorrEtapa()" style="flex:1;">Guardar corrección</button>
+      <button class="btn" onclick="closeCorrEtapa()">Cancelar</button>
+    </div>
+  </div>
+</div>
+<!-- MODAL DESPACHO CON CONTRATO -->
+<div class="mbg" id="modal-despacho">
+  <div class="modal">
+    <div class="mh"><h2>🚚 Confirmar despacho</h2><button class="mc" onclick="closeDespacho()">✕</button></div>
+    <p style="font-size:11px;color:var(--mut);margin-bottom:10px;">Toma las fotos del contrato antes de entregar el equipo al cliente.</p>
+    <div style="background:var(--surf2);border:1px solid var(--brd);border-radius:var(--rs);padding:10px 12px;margin-bottom:12px;font-size:12px;" id="dc-info"></div>
+    <input type="hidden" id="dc-placa">
+    <input type="hidden" id="dc-plan-ts">
+    <div class="fg fspan" style="margin-bottom:12px;">
+      <label>📄 Fotos del contrato <span class="req">*</span> <span style="color:var(--mut);font-weight:400;">(frontal y reverso obligatorios)</span></label>
+      <div class="foto3-counter pend" id="dc-cnt">0 / 2 fotos tomadas</div>
+      <div class="foto3-grid" style="grid-template-columns:1fr 1fr;">
+        <div class="foto3-item">
+          <div class="foto3-lbl">📄 Frontal</div>
+          <div class="foto3-area" id="dc-area-f" onclick="document.getElementById('dc-inp-f').click()">
+            <input type="file" id="dc-inp-f" accept="image/jpeg,image/png,image/*" capture="environment">
+            <img class="foto3-prev" id="dc-prev-f" src="" alt="">
+            <div class="foto3-icon">📷</div>
+            <div class="foto3-txt">Frente del contrato</div>
+            <div class="foto3-check">✅</div>
+          </div>
+        </div>
+        <div class="foto3-item">
+          <div class="foto3-lbl">📄 Reverso</div>
+          <div class="foto3-area" id="dc-area-r" onclick="document.getElementById('dc-inp-r').click()">
+            <input type="file" id="dc-inp-r" accept="image/jpeg,image/png,image/*" capture="environment">
+            <img class="foto3-prev" id="dc-prev-r" src="" alt="">
+            <div class="foto3-icon">📷</div>
+            <div class="foto3-txt">Reverso del contrato</div>
+            <div class="foto3-check">✅</div>
+          </div>
+        </div>
+      </div>
+      <input type="hidden" id="dc-foto-f">
+      <input type="hidden" id="dc-foto-r">
+    </div>
+    <div class="ts-box">
+      <span style="font-size:18px;">🕐</span>
+      <div><div style="font-size:10px;color:var(--mut);font-weight:600;">Fecha y hora de despacho (automática)</div><div style="font-size:13px;font-weight:700;" id="ts-dc">—</div></div>
+    </div>
+    <div style="display:flex;gap:8px;">
+      <button class="btn btn-ok" onclick="confirmarDespacho()" id="btn-dc" style="flex:1;">🚚 Confirmar despacho</button>
+      <button class="btn" onclick="closeDespacho()">Cancelar</button>
+    </div>
+  </div>
+</div>
+<!-- MODAL SUBIR / EDITAR CONTRATO -->
+<div class="mbg" id="modal-contrato">
+  <div class="modal">
+    <div class="mh"><h2>📄 Foto del contrato</h2><button class="mc" onclick="closeContrato()">✕</button></div>
+    <p style="font-size:11px;color:var(--mut);margin-bottom:10px;">Sube o reemplaza las fotos del contrato de este despacho.</p>
+    <div style="background:var(--surf2);border:1px solid var(--brd);border-radius:var(--rs);padding:10px 12px;margin-bottom:12px;font-size:12px;" id="ct-info"></div>
+    <input type="hidden" id="ct-placa">
+    <input type="hidden" id="ct-ts">
+    <div class="fg fspan" style="margin-bottom:12px;">
+      <label>📄 Fotos del contrato <span class="req">*</span> <span style="color:var(--mut);font-weight:400;">(frontal y reverso obligatorios)</span></label>
+      <div class="foto3-counter pend" id="ct-cnt">0 / 2 fotos tomadas</div>
+      <div class="foto3-grid" style="grid-template-columns:1fr 1fr;">
+        <div class="foto3-item">
+          <div class="foto3-lbl">📄 Frontal</div>
+          <div class="foto3-area" id="ct-area-f" onclick="document.getElementById('ct-inp-f').click()">
+            <input type="file" id="ct-inp-f" accept="image/jpeg,image/png,image/*" capture="environment">
+            <img class="foto3-prev" id="ct-prev-f" src="" alt="">
+            <div class="foto3-icon">📷</div>
+            <div class="foto3-txt">Frente del contrato</div>
+            <div class="foto3-check">✅</div>
+          </div>
+        </div>
+        <div class="foto3-item">
+          <div class="foto3-lbl">📄 Reverso</div>
+          <div class="foto3-area" id="ct-area-r" onclick="document.getElementById('ct-inp-r').click()">
+            <input type="file" id="ct-inp-r" accept="image/jpeg,image/png,image/*" capture="environment">
+            <img class="foto3-prev" id="ct-prev-r" src="" alt="">
+            <div class="foto3-icon">📷</div>
+            <div class="foto3-txt">Reverso del contrato</div>
+            <div class="foto3-check">✅</div>
+          </div>
+        </div>
+      </div>
+      <input type="hidden" id="ct-foto-f">
+      <input type="hidden" id="ct-foto-r">
+    </div>
+    <div style="display:flex;gap:8px;">
+      <button class="btn btn-ok" onclick="confirmarContrato()" id="btn-ct" style="flex:1;">💾 Guardar contrato</button>
+      <button class="btn" onclick="closeContrato()">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<div class="lb-bg" id="lb" onclick="closeLB()">
+  <button class="lb-close">✕</button>
+  <img class="lb-img" id="lb-img" src="" alt="">
+  <div class="lb-cap" id="lb-cap"></div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+var SK='pingu_v7', CK='pingu_cfg_v2';
+var APPS_URL='https://script.google.com/macros/s/AKfycbzAc1BH1wSGtbdudVQ4rwBk21DRRT_d2Ypb5xDUGXynDuAt7vTgxbICWgUcc9cYETnn/exec';
+var AURL=APPS_URL, LOCAL=false;
+var DB={equipos:{},movimientos:[],mantenimientos:[],usuarios:[]};
+var bF='TODOS',bS='',mF='TODOS',mS='',mvF='TODOS',mvS='',plF='TODAS',plS='',rpF='TODOS',rpS='';
+var _et='';
+var _corrEt='';
+var SI={};
+
+function g(id){return document.getElementById(id);}
+function setS(v){g('slbl').innerHTML=v;}
+function saveL(){localStorage.setItem(SK,JSON.stringify(DB));}
+function eqArr(){return Object.values(DB.equipos);}
+function x(v){return String(v||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function hora(){return new Date().toLocaleTimeString('es-EC',{hour:'2-digit',minute:'2-digit'});}
+function hoyStr(){return new Date().toISOString().split('T')[0];}
+function fF(ts){if(!ts)return'—';var p=ts.substring(0,10).split('-');return p[2]+'/'+p[1]+'/'+p[0];}
+function dt(ts){if(!ts)return'—';try{var d=new Date(ts);return d.toLocaleDateString('es-EC',{day:'2-digit',month:'2-digit',year:'2-digit'})+' '+d.toLocaleTimeString('es-EC',{hour:'2-digit',minute:'2-digit'});}catch(e){return ts;}}
+function dd(ts){if(!ts)return 0;return Math.floor((Date.now()-new Date(ts).getTime())/86400000);}
+function dBadge(ts){var d=dd(ts);var c=d<=3?'tr-ok':d<=14?'tr-wn':'tr-dn';return'<span class="tr '+c+'">'+d+'d</span>';}
+function horasDesde(ts){
+  if(!ts)return null;
+  var h=Math.max(0,Math.floor((Date.now()-new Date(ts).getTime())/3600000));
+  return isFinite(h)?h:null;
+}
+function tiempoEnBodega(e){
+  if(!e||e.estado!=='BODEGA_OK')return'—';
+  var h=horasDesde(e.tsUltMov||e.tsIngresoBodega);
+  if(h===null)return'—';
+  var c=h<=72?'tr-ok':h<=336?'tr-wn':'tr-dn';
+  return'<span class="tr '+c+'">'+fmtDur(h)+'</span>';
+}
+function bSt(e){
+  if(e.estado==='BODEGA_OK')return'<span class="badge b-ok">✓ OK</span>';
+  if(e.estado==='MERCADO')return'<span class="badge b-mv">🚚 Mercado</span>';
+  if(e.estado==='MANTENIMIENTO')return'<span class="badge b-mt">🔧 Mant.</span>';
+  if(e.estado==='DAÑADO')return'<span class="badge b-dn">✕ Dañado</span>';
+  return'<span class="badge">'+x(e.estado)+'</span>';
+}
+function bEt(et){
+  var lbl={A:'A · Limpieza',B:'B · Repuestos',C:'C · Completo'};
+  var cls={A:'b-a',B:'b-b',C:'b-c'};
+  if(!et)return'—';
+  return'<span class="badge '+(cls[et]||'')+'">'+(lbl[et]||et)+'</span>';
+}
+function toast(msg,tp){var el=g('toast');el.textContent=msg;el.className='toast on'+(tp?' '+tp:'');setTimeout(function(){el.className='toast';},3200);}
+
+function comprimirFoto(file, cb, errCb) {
+  if(!file){ if(errCb) errCb('sin archivo'); return; }
+  var done=false, objectUrl='';
+  var safety=setTimeout(function(){
+    if(!done){ finalizar(); if(errCb) errCb('tiempo agotado, intenta de nuevo'); }
+  }, 20000);
+
+  function finalizar(){
+    done=true;
+    clearTimeout(safety);
+    if(objectUrl){ URL.revokeObjectURL(objectUrl); objectUrl=''; }
+  }
+
+  function blobToDataURL(blob){
+    var reader=new FileReader();
+    reader.onerror=function(){ if(errCb) errCb('no se pudo guardar la foto comprimida'); };
+    reader.onload=function(ev){
+      var data=ev.target.result;
+      if(!data||data.length<100){ if(errCb) errCb('imagen vacía tras comprimir'); return; }
+      cb(data);
+    };
+    reader.readAsDataURL(blob);
+  }
+
+  function dibujarImagen(img){
+    if(done) return;
+    try {
+      var MAX=1200;
+      var ow=img.naturalWidth||img.width, oh=img.naturalHeight||img.height;
+      if(!ow||!oh){ finalizar(); if(errCb) errCb('imagen sin dimensiones'); return; }
+      var w=ow, h=oh;
+      if(w>h){ if(w>MAX){ h=Math.round(h*MAX/w); w=MAX; } }
+      else { if(h>MAX){ w=Math.round(w*MAX/h); h=MAX; } }
+      var canvas=document.createElement('canvas');
+      canvas.width=w; canvas.height=h;
+      var ctx=canvas.getContext('2d');
+      ctx.drawImage(img,0,0,w,h);
+      if(canvas.toBlob){
+        canvas.toBlob(function(blob){
+          finalizar();
+          if(!blob){ if(errCb) errCb('error exportando imagen'); return; }
+          blobToDataURL(blob);
+        }, 'image/jpeg', 0.75);
+      } else {
+        var data=canvas.toDataURL('image/jpeg',0.75);
+        finalizar();
+        if(!data||data.length<100){ if(errCb) errCb('imagen vacía tras comprimir'); return; }
+        cb(data);
+      }
+    } catch(e) {
+      finalizar();
+      if(errCb) errCb('excepción al procesar: '+e.message);
+    }
+  }
+
+  function cargarConImage(){
+    objectUrl=URL.createObjectURL(file);
+    var img=new Image();
+    img.onerror=function(){
+      finalizar();
+      if(errCb) errCb('no se pudo decodificar la imagen. Si es HEIC, cambia la cámara a JPG/JPEG o selecciona una foto compatible');
+    };
+    img.onload=function(){ dibujarImagen(img); };
+    img.src=objectUrl;
+  }
+
+  try {
+    if(window.createImageBitmap){
+      createImageBitmap(file, {imageOrientation:'from-image'}).then(function(bitmap){
+        dibujarImagen(bitmap);
+        if(bitmap.close) bitmap.close();
+      }).catch(function(){ cargarConImage(); });
+    } else {
+      cargarConImage();
+    }
+  } catch(e) {
+    cargarConImage();
+  }
+}
+
+var _capInProgress={};
+function capFoto(prefix, vista) {
+  var key=prefix+'-'+vista;
+  var inp = g(prefix+'-inp-'+vista);
+  if(!inp||!inp.files||!inp.files[0]) return;
+  if(_capInProgress[key]) return;
+  _capInProgress[key]=true;
+  setTimeout(function(){_capInProgress[key]=false;},1500);
+  var area = g(prefix+'-area-'+vista);
+  if(area) area.style.opacity='0.5';
+  toast('Procesando foto...','warn');
+  comprimirFoto(inp.files[0], function(data) {
+    g(prefix+'-foto-'+vista).value = data;
+    var prev = g(prefix+'-prev-'+vista);
+    prev.src = data; prev.classList.add('on');
+    if(area){ area.classList.add('done'); area.style.opacity='1'; }
+    actualizarCnt(prefix);
+    toast('✅ Foto guardada','ok');
+  }, function(errMsg){
+    if(area) area.style.opacity='1';
+    toast('❌ Error con la foto: '+errMsg,'err');
+    console.error('Error captura foto:', errMsg);
+  });
+}
+
+function actualizarCnt(prefix) {
+  var vs=vistas(prefix);
+  var n=vs.filter(function(v){var el=g(prefix+'-foto-'+v);return el&&!!el.value;}).length;
+  var el=g(prefix+'-cnt');
+  if(!el) return;
+  el.textContent=n+' / '+vs.length+' fotos tomadas';
+  el.className='foto3-counter '+(n===vs.length?'ok':'pend');
+}
+
+function vistas(prefix) {
+  if(prefix==='ce') return ['f','t','i','p'];
+  if(prefix==='dc'||prefix==='ct') return ['f','r'];
+  return ['f','t','i'];
+}
+
+function getFotos3(prefix) {
+  var res={};
+  vistas(prefix).forEach(function(v){ res[v]=g(prefix+'-foto-'+v)?g(prefix+'-foto-'+v).value:''; });
+  return res;
+}
+
+function validarFotos3(prefix) {
+  var fotos=getFotos3(prefix);
+  return vistas(prefix).every(function(v){ return !!fotos[v]; });
+}
+
+function resetFotos3(prefix) {
+  vistas(prefix).forEach(function(v) {
+    var inp=g(prefix+'-foto-'+v); if(inp)inp.value='';
+    var prev=g(prefix+'-prev-'+v);
+    if(prev){prev.src='';prev.classList.remove('on');}
+    var area=g(prefix+'-area-'+v);
+    if(area)area.classList.remove('done');
+  });
+  actualizarCnt(prefix);
+}
+
+function driveFileId(url){
+  var s=String(url||'');
+  var m=s.match(/\/d\/([^\/]+)/)||s.match(/[?&]id=([^&]+)/);
+  return m?m[1]:'';
+}
+function fotoSrc(url, large){
+  var id=driveFileId(url);
+  if(id)return 'https://drive.google.com/thumbnail?id='+id+'&sz='+(large?'w1600':'w240');
+  return url;
+}
+function openLB(src, cap) {
+  var original=src||'';
+  g('lb-img').src=fotoSrc(original,true);
+  g('lb-cap').textContent=cap||'';
+  g('lb').classList.add('on');
+}
+function closeLB() { g('lb').classList.remove('on'); g('lb-img').src=''; }
+
+function thumbImg(url, cap, alt){
+  var src=fotoSrc(url,false);
+  var full=fotoSrc(url,true);
+  return '<img class="thumb" src="'+x(src)+'" data-full="'+x(full)+'" title="'+x(cap)+'" onclick="openLB(this.dataset.full,this.title)" alt="'+x(alt)+'" onerror="this.style.display=\'none\'">';
+}
+function thumbs(placa, modo) {
+  var eq=DB.equipos[placa]; if(!eq) return '-';
+  var out='';
+  var vistas=['f','t','i'];
+  var lbs=['Frontal','Trasera','Interior'];
+  if(modo==='e'||modo==='b'||modo==='m'){
+    var fe=eq.fotosEntrada||{};
+    var vstE=['f','t','i','p'], lblE=['Frontal','Trasera','Interior','Placa'];
+    vstE.forEach(function(v,i){
+      if(fe[v]) out+=thumbImg(fe[v],'Entrada '+lblE[i]+' — '+placa,lblE[i][0]);
+    });
+  }
+  if(modo==='m'){
+    var fc=eq.fotosContrato||{};
+    if(fc.f) out+=thumbImg(fc.f,'Contrato Frontal — '+placa,'CF');
+    if(fc.r) out+=thumbImg(fc.r,'Contrato Reverso — '+placa,'CR');
+  }
+  if(modo==='s'||modo==='b'){
+    var fs=eq.fotosSalida||{};
+    vistas.forEach(function(v,i){
+      if(fs[v]) out+=thumbImg(fs[v],'Salida '+lbs[i]+' — '+placa,lbs[i][0]);
+    });
+  }
+  return out||'-';
+}
+
+function openFotosOK(placa){
+  if(!canEditBodega()){toast('No tienes permiso','err');return;}
+  var e=DB.equipos[placa]; if(!e){toast('Equipo no encontrado','err');return;}
+  bindFotoInputs();
+  g('fk-placa').value=placa;
+  g('fk-placa-show').textContent=placa;
+  g('fk-mod-show').textContent=e.modelo||'—';
+  resetFotos3('fk');
+  // Precargar fotos existentes (fotosSalida) para que se vean
+  var fs=e.fotosSalida||{};
+  ['f','t','i'].forEach(function(v){
+    if(fs[v]){
+      g('fk-foto-'+v).value=fs[v];
+      var prev=g('fk-prev-'+v); if(prev){prev.src=fotoSrc(fs[v],false);prev.classList.add('on');}
+      var area=g('fk-area-'+v); if(area)area.classList.add('done');
+    }
+  });
+  actualizarCnt('fk');
+  g('modal-fotok').classList.add('on');
+}
+async function guardarFotosOK(){
+  var placa=g('fk-placa').value;
+  var e=DB.equipos[placa]; if(!e){toast('Equipo no encontrado','err');return;}
+  var fotos=getFotos3('fk');
+  if(!fotos.f&&!fotos.t&&!fotos.i){toast('Sube al menos una foto','err');return;}
+  var ts=new Date().toISOString();
+  e.fotosSalida=fotos; e.tsUltMov=ts;
+  var btn=g('btn-fk');btn.disabled=true;btn.innerHTML='<span class="sp"></span>';
+  await push({action:'actualizarFotos',placa:placa,fotosSalida:fotos,ts:ts});
+  btn.disabled=false;btn.innerHTML='💾 Guardar fotos';
+  g('modal-fotok').classList.remove('on');
+  rAll();
+  toast('✅ Fotos actualizadas — '+placa,'ok');
+}
+function openListo(placa) {
+  bindFotoInputs();
+  var e=DB.equipos[placa]; if(!e) return;
+  g('ml-placa').value=placa;
+  g('ml-placa-show').textContent=placa;
+  g('ml-etapa-show').textContent=e.etapa||'';
+  resetFotos3('ml');
+  g('modal-listo').classList.add('on');
+}
+
+async function confirmarListo() {
+  var placa=g('ml-placa').value;
+  if(!validarFotos3('ml')){toast('Toma las 3 fotos obligatorias (frontal, trasera, interior)','err');return;}
+  var foto3=getFotos3('ml');
+  var e=DB.equipos[placa]; if(!e) return;
+  var ts=new Date().toISOString(), dias=dd(e.tsEtapa);
+  if(!e.histEtapas)e.histEtapas=[];
+  e.histEtapas.push({etapa:e.etapa,tsInicio:e.tsEtapa,tsFin:ts,dias:dias,trabajos:e.trabajos||[]});
+  var etFin=e.etapa, trabajosFin=e.trabajos||[], tsInicio=e.tsEtapa||e.tsIngresoBodega||'';
+  DB.mantenimientos=DB.mantenimientos||[];
+  DB.mantenimientos.push({placa:placa,modelo:e.modelo||'',etapa:etFin,tsInicio:tsInicio,tsFin:ts,dias:dias,trabajos:trabajosFin});
+  e.estado='BODEGA_OK';e.etapa='';e.trabajos=[];e.tsUltMov=ts;e.fotosSalida=foto3;
+  var btn=g('btn-ml');btn.disabled=true;btn.innerHTML='<span class="sp"></span>';
+  await push({action:'finalizarMant',placa:placa,modelo:e.modelo||'',etapa:etFin,dias:dias,tsInicio:tsInicio,ts:ts,trabajos:trabajosFin,fotosSalida:foto3});
+  btn.disabled=false;btn.innerHTML='✓ Confirmar — pasar a bodega OK';
+  g('modal-listo').classList.remove('on'); resetFotos3('ml');
+  rAll();toast('✅ Placa '+placa+' ('+etFin+', '+fmtDur(horasMant({tsInicio:tsInicio,tsFin:ts,dias:dias})) +') — bodega OK','ok');
+}
+
+function selTransp(val, btn) {
+  g('s-del').value = val;
+  document.querySelectorAll('.transp-btn').forEach(function(b){b.classList.remove('sel');});
+  btn.classList.add('sel');
+}
+
+
+function cargarDesdeExcel(){
+  // Todo viene del Sheets directamente
+  if(AURL&&!LOCAL){loadData();}
+  else{rAll();setS('🗄 Local');}
+}
+
+function bindFotoInputs(){
+  var pares=[['ce','f'],['ce','t'],['ce','i'],['ce','p'],['ml','f'],['ml','t'],['ml','i'],['fk','f'],['fk','t'],['fk','i'],['dc','f'],['dc','r'],['ct','f'],['ct','r']];
+  pares.forEach(function(p){
+    var prefix=p[0], vista=p[1];
+    var inp=g(prefix+'-inp-'+vista);
+    if(!inp) return;
+    if(inp._bound) return;
+    inp._bound=true;
+    inp.addEventListener('click', function(ev){ ev.stopPropagation(); }, false);
+    inp.addEventListener('change', function(){ capFoto(prefix,vista); }, false);
+  });
+}
+
+function init(){
+  AURL=APPS_URL;
+  LOCAL=false;
+  localStorage.setItem(CK,JSON.stringify({url:APPS_URL,local:false}));
+  DB={equipos:{},movimientos:[],mantenimientos:[]};
+  bindFotoInputs();
+  loadData();
+}
+
+async function loadData(){
+  setS('⏳ Sync...');
+  try{
+    var r=await fetch(AURL+'?action=getAll',{redirect:'follow'});
+    var d=await r.json();
+    if(d.db){
+      DB=d.db;
+      if(d.usuarios&&d.usuarios.length){DB.usuarios=d.usuarios;}
+      saveL();rAll();llenarUsuariosLogin();setS('✅ '+hora());return;
+    }
+    throw new Error(d.error||'sin datos');
+  }
+  catch(e){
+    setS('❌ Error sync');
+    toast('No se pudo sincronizar con Google Sheets','err');
+  }
+}
+async function push(p){
+  if(LOCAL||!AURL){saveL();return false;}
+  try{
+    var r=await fetch(AURL,{method:'POST',redirect:'follow',headers:{'Content-Type':'text/plain'},body:JSON.stringify(p)});
+    var d=await r.json();
+    if(d.ok){saveL();return true;}
+    saveL();
+    toast('Error Apps Script: '+(d.error||'respuesta no OK'),'err');
+    console.error('Apps Script error:', d);
+    return false;
+  }
+  catch(e){
+    saveL();
+    toast('Guardado local (sin conexión): '+e.message,'warn');
+    console.error('Error conexión Apps Script:', e);
+    return false;
+  }
+}
+
+function rAll(){rKPI();rRes();rBod();rMnt();rRep();rMov();rPlan();chkAlert();}
+
+function rKPI(){
+  var eq=eqArr(),hoy=hoyStr();
+  g('k-ok').textContent=eq.filter(function(e){return e.estado==='BODEGA_OK';}).length;
+  g('k-mv').textContent=eq.filter(function(e){return e.estado==='MERCADO';}).length;
+  g('k-mt').textContent=eq.filter(function(e){return e.estado==='MANTENIMIENTO';}).length;
+  g('k-dn').textContent=eq.filter(function(e){return e.estado==='DAÑADO';}).length;
+  var planHoy=(DB.movimientos||[]).filter(function(m){return esPlanPendiente(m)&&m.fechaPlan===hoy;}).length;
+  g('k-ph').textContent=planHoy;
+}
+
+function chkAlert(){
+  var hoy=hoyStr();
+  var movs=DB.movimientos||[];
+  var planHoy=movs.filter(function(m){return esPlanPendiente(m)&&m.fechaPlan===hoy;});
+  var vencidas=movs.filter(function(m){return esPlanPendiente(m)&&m.fechaPlan<hoy;});
+  var al=g('alert-plan');
+  if(planHoy.length>0||vencidas.length>0){
+    al.classList.add('on');
+    if(vencidas.length>0){
+      g('alert-plan-title').textContent='⚠ '+vencidas.length+' entrega(s) vencida(s) sin registrar';
+      g('alert-plan-msg').textContent='Tenías entregas planificadas para días anteriores que aún no se han confirmado.';
+    } else {
+      g('alert-plan-title').textContent='📅 Hoy hay '+planHoy.length+' captación(es) planificada(s)';
+      g('alert-plan-msg').textContent='Recuerda confirmar las salidas al mercado de hoy.';
+    }
+  } else {
+    al.classList.remove('on');
+  }
+}
+
+function rRes(){
+  var movs=[].concat(DB.movimientos||[]).filter(function(m){return !esPlanPendiente(m);}).sort(function(a,b){return b.ts.localeCompare(a.ts);}).slice(0,10);
+  g('cc-um').textContent=movs.length+' recientes';
+  g('tb-um').innerHTML=movs.length?movs.map(function(m){
+    var badge=esMovBaja(m)?'<span class="badge b-dn">✕ Baja</span>':m.tipo==='SALIDA'?'<span class="badge b-mv">↑ Captación</span>':m.tipo==='ENVIO_QUITO'?'<span class="badge b-mt">→ Quito</span>':'<span class="badge b-ok">↓ Entrada</span>';
+    return'<tr><td class="tm">'+dt(m.ts)+'</td><td>'+badge+'</td><td class="tp">'+x(m.placa)+'</td><td>'+x(m.modelo)+'</td><td class="tm">'+x((m.codCli?m.codCli+' — ':'')+m.nomCli||m.cliente||'—')+'</td></tr>';
+  }).join(''):'<tr><td colspan="5" class="empty">Sin movimientos</td></tr>';
+
+  var hoy=hoyStr();
+  var manana=new Date(); manana.setDate(manana.getDate()+1);
+  var mananaStr=manana.toISOString().split('T')[0];
+  var semana=new Date(); semana.setDate(semana.getDate()+7);
+  var semanaStr=semana.toISOString().split('T')[0];
+  var planProx=[].concat(DB.movimientos||[]).filter(function(m){return esPlanPendiente(m)&&m.fechaPlan<=semanaStr;}).sort(function(a,b){return a.fechaPlan.localeCompare(b.fechaPlan);}).slice(0,8);
+  g('cc-plan-res').textContent=planProx.length+' próximas';
+  g('tb-plan-res').innerHTML=planProx.length?planProx.map(function(m){
+    var esHoy=m.fechaPlan===hoy, esVenc=m.fechaPlan<hoy;
+    var est=esVenc?'<span class="badge b-dn">Vencida</span>':esHoy?'<span class="badge b-pl">Hoy</span>':'<span class="badge b-mt">Próxima</span>';
+    var rowCls=esVenc?'plan-vencida':esHoy?'plan-hoy':'';
+    return'<tr class="'+rowCls+'"><td class="tm">'+fF(m.fechaPlan)+'</td><td class="tp">'+x(m.placa)+'</td><td>'+x(m.modelo)+'</td><td class="tm" style="font-family:monospace;">'+x(m.codCli||'—')+'</td><td class="tm">'+x(m.nomCli||'—')+'</td><td>'+est+'</td></tr>';
+  }).join(''):'<tr><td colspan="6" class="empty">Sin entregas planificadas</td></tr>';
+}
+
+function normTxt(v){
+  return String(v||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+}
+function esMovBaja(m){
+  var t=normTxt((m.tipo||'')+' '+(m.codCli||'')+' '+(m.nomCli||'')+' '+(m.cliente||'')+' '+(m.estado||''));
+  return (m.tipo==='BAJA')||t.indexOf('baja')>=0||t.indexOf('sin_arreglo')>=0||t.indexOf('sin arreglo')>=0||t.indexOf('no hay arreglo')>=0;
+}
+function esPlanPendiente(m){
+  return m&&m.tipo==='SALIDA'&&!esMovBaja(m)&&!!m.fechaPlan&&m.estado!=='DESPACHADO'&&m.estado!=='MERCADO';
+}
+function esSalidaReal(m){
+  return m&&m.tipo==='SALIDA'&&!esMovBaja(m)&&!esPlanPendiente(m);
+}
+function accionDanado(e){
+  if(!canEditBodega())return '<span class="badge b-dn">✕ Dañado</span>';
+  var obs=normTxt(e.obs||'');
+  if(obs.indexOf('quito')>=0){
+    return '<button class="btn btn-mini btn-sal" data-p="'+x(e.placa)+'" onclick="openResolverDanado(this.dataset.p)">Salida</button>';
+  }
+  if(obs.indexOf('baja')>=0||obs.indexOf('unilever')>=0){
+    return '<button class="btn btn-mini" style="background:var(--dn-b);color:var(--dn-c);border-color:var(--dn-c);" data-p="'+x(e.placa)+'" onclick="salidaDanado(this.dataset.p,\'BAJA_UNILEVER\')">Baja Unilever</button>';
+  }
+  return '<span class="badge b-dn">✕ Dañado</span>';
+}
+function openResolverDanado(placa){
+  var e=DB.equipos[placa]; if(!e)return;
+  g('rd-placa').value=placa;
+  g('rd-placa-show').textContent=placa;
+  g('rd-obs-show').textContent=e.obs?'Obs: '+e.obs:'';
+  g('modal-res-danado').classList.add('on');
+}
+function closeResolverDanado(){
+  g('modal-res-danado').classList.remove('on');
+}
+function resolverDanadoArreglo(){
+  var placa=g('rd-placa').value;
+  closeResolverDanado();
+  openListo(placa);
+}
+function resolverDanadoNoArreglo(){
+  var placa=g('rd-placa').value;
+  closeResolverDanado();
+  noArregloQuito(placa);
+}
+async function salidaDanado(placa, tipo){
+  var e=DB.equipos[placa]; if(!e)return;
+  var esBaja=tipo==='BAJA_UNILEVER';
+  if(esBaja&&!confirm('Registrar baja Unilever y quitar '+placa+' del stock?'))return;
+  var destino=esBaja?'BAJA UNILEVER':'ENVIO QUITO';
+  var ts=new Date().toISOString();
+  var mov={tipo:esBaja?'BAJA':'ENVIO_QUITO',placa:e.placa,modelo:e.modelo||'',codCli:esBaja?'BAJA':'QUITO',nomCli:destino,cliente:destino,delegado:'MANUEL GUAMAN',fechaPlan:esBaja?'':hoyStr(),numPlan:null,etapa:esBaja?'':'C',estado:esBaja?'BAJA':'MANTENIMIENTO',trabajos:esBaja?[]:['ENVIO QUITO'],obs:e.obs||'',ts:ts};
+  DB.movimientos=DB.movimientos||[];DB.movimientos.push(mov);
+  if(esBaja){
+    delete DB.equipos[placa];
+  } else {
+    e.estado='MANTENIMIENTO';
+    e.etapa='C';
+    e.trabajos=['ENVIO QUITO'];
+    e.cliente='';
+    e.tsEtapa=ts;
+    e.tsUltMov=ts;
+  }
+  rAll();
+  var ok=await push({action:esBaja?'bajaEquipo':'enviarQuito',data:mov});
+  toast((ok?'✅ ':'⚠ ')+(esBaja?'Baja registrada':'Enviado a Quito / mantenimiento')+' — '+placa, ok?'ok':'warn');
+  loadData();
+}
+function esEnvioQuito(e){
+  return (e.trabajos||[]).some(function(t){return normTxt(t).indexOf('envio quito')>=0;});
+}
+function accionMantenimiento(e){
+  if(!canEditBodega())return '<span class="badge b-mt">Mant.</span>';
+  if(esEnvioQuito(e)){
+    return '<div class="dmg-actions"><button class="btn btn-mini btn-ok" data-p="'+x(e.placa)+'" onclick="openListo(this.dataset.p)">Arreglado</button><button class="btn btn-mini" style="background:var(--dn-b);color:var(--dn-c);border-color:var(--dn-c);" data-p="'+x(e.placa)+'" onclick="noArregloQuito(this.dataset.p)">No hay arreglo</button></div>';
+  }
+  return '<div class="dmg-actions"><button class="btn btn-ok" style="font-size:10px;" data-p="'+x(e.placa)+'" onclick="openListo(this.dataset.p)">✓ Listo</button><button class="btn btn-mini" style="background:var(--mt-b);color:var(--mt-c);border-color:var(--mt-c);" data-p="'+x(e.placa)+'" onclick="openCorrEtapa(this.dataset.p)">✎ Etapa</button></div>';
+}
+async function noArregloQuito(placa){
+  var e=DB.equipos[placa]; if(!e)return;
+  var ts=new Date().toISOString();
+  var mov={tipo:'BAJA',placa:e.placa,modelo:e.modelo||'',codCli:'SIN_ARREGLO',nomCli:'NO HAY ARREGLO QUITO',cliente:'NO HAY ARREGLO QUITO',delegado:'MANUEL GUAMAN',fechaPlan:'',numPlan:null,estado:'BAJA',obs:(e.obs||'')+' | NO HAY ARREGLO QUITO',ts:ts};
+  DB.movimientos=DB.movimientos||[];DB.movimientos.push(mov);
+  delete DB.equipos[placa];
+  rAll();
+  var ok=await push({action:'bajaEquipo',data:mov});
+  toast((ok?'✅ ':'⚠ ')+'Equipo retirado del stock — '+placa, ok?'ok':'warn');
+  loadData();
+}
+function openCorrEtapa(placa){
+  if(!canEditBodega()){toast('No tienes permiso','err');return;}
+  var e=DB.equipos[placa]; if(!e){toast('Equipo no encontrado','err');return;}
+  _corrEt='';
+  g('cor-placa').value=placa;
+  g('cor-placa-show').textContent=placa;
+  g('cor-actual-show').innerHTML=bEt(e.etapa);
+  document.querySelectorAll('#modal-corr-etapa .esb').forEach(function(b){b.className='esb';});
+  g('cor-warn-dan').style.display='none';
+  g('modal-corr-etapa').classList.add('on');
+}
+function selCorrEt(et,btn){
+  _corrEt=et;
+  document.querySelectorAll('#modal-corr-etapa .esb').forEach(function(b){b.className='esb';});
+  var cls={A:'s-a',B:'s-b',C:'s-c',DAÑADO:'s-d'};
+  btn.className='esb '+(cls[et]||'');
+  g('cor-warn-dan').style.display=(et==='DAÑADO')?'block':'none';
+}
+function closeCorrEtapa(){g('modal-corr-etapa').classList.remove('on');}
+async function confirmarCorrEtapa(){
+  var placa=g('cor-placa').value, et=_corrEt;
+  var e=DB.equipos[placa]; if(!e){toast('Equipo no encontrado','err');return;}
+  if(!et){toast('Selecciona la etapa correcta','err');return;}
+  if(et===e.etapa){toast('Ya está en esa etapa','warn');return;}
+  var ts=new Date().toISOString();
+  var esDan=(et==='DAÑADO');
+  if(esDan){
+    if(!confirm('¿Marcar '+placa+' como DAÑADO? Saldrá de Mantenimiento.'))return;
+    e.estado='DAÑADO'; e.etapa=''; e.tsEtapa='';
+  } else {
+    e.estado='MANTENIMIENTO'; e.etapa=et; // tsEtapa se conserva: es una corrección, no un nuevo ingreso
+  }
+  e.tsUltMov=ts;
+  var btn=g('btn-cor-et'); btn.disabled=true; btn.innerHTML='<span class="sp"></span>';
+  var ok=await push({action:'corregirEtapa',placa:placa,etapa:e.etapa,estado:e.estado,ts:ts});
+  btn.disabled=false; btn.innerHTML='Guardar corrección';
+  closeCorrEtapa(); rAll();
+  toast((ok?'✅ ':'⚠ ')+'Etapa corregida — '+placa+(esDan?' (Dañado)':' → '+et), ok?'ok':'warn');
+}
+function rBod(){
+  var allEq=eqArr();
+  var cOK=allEq.filter(function(e){return e.estado==='BODEGA_OK';}).length;
+  var cMer=allEq.filter(function(e){return e.estado==='MERCADO';}).length;
+  var cDn=allEq.filter(function(e){return e.estado==='DAÑADO';}).length;
+  var cA=allEq.filter(function(e){return e.etapa==='A';}).length;
+  var cB=allEq.filter(function(e){return e.etapa==='B';}).length;
+  var cC=allEq.filter(function(e){return e.etapa==='C';}).length;
+  if(g('fb-bo-todos'))g('fb-bo-todos').textContent='Todos ('+allEq.length+')';
+  if(g('fb-bo-ok'))g('fb-bo-ok').textContent='OK ('+cOK+')';
+  if(g('fb-bo-mer'))g('fb-bo-mer').textContent='En mercado ('+cMer+')';
+  if(g('fb-bo-a'))g('fb-bo-a').textContent='Etapa A ('+cA+')';
+  if(g('fb-bo-b'))g('fb-bo-b').textContent='Etapa B ('+cB+')';
+  if(g('fb-bo-c'))g('fb-bo-c').textContent='Etapa C ('+cC+')';
+  if(g('fb-bo-dn'))g('fb-bo-dn').textContent='Dañados ('+cDn+')';
+  var eq=allEq;
+  g('cc-bo').textContent=eq.length+' equipos';
+  if(bF==='OK')eq=eq.filter(function(e){return e.estado==='BODEGA_OK';});
+  else if(bF==='MERCADO')eq=eq.filter(function(e){return e.estado==='MERCADO';});
+  else if(bF==='DAÑADO')eq=eq.filter(function(e){return e.estado==='DAÑADO';});
+  else if(bF==='A'||bF==='B'||bF==='C')eq=eq.filter(function(e){return e.etapa===bF;});
+  if(bS){var q=bS.toLowerCase();eq=eq.filter(function(e){return(e.placa+e.modelo+(e.obs||'')+(e.cliente||'')).toLowerCase().indexOf(q)>=0;});}
+  var tb=g('tb-bo');
+  if(!eq.length){tb.innerHTML='<tr><td colspan="9" class="empty">Sin resultados</td></tr>';return;}
+  tb.innerHTML=eq.map(function(e){
+    var et=e.etapa?bEt(e.etapa):'—';
+    var tags=(e.trabajos||[]).map(function(t){return'<span class="tag">'+x(t)+'</span>';}).join('');
+    var accion;
+    if(e.estado==='MANTENIMIENTO')accion=accionMantenimiento(e);
+    else if(e.estado==='DAÑADO')accion=accionDanado(e);
+    else if(e.estado==='MERCADO')accion='<span class="badge b-mv">En mercado</span>';
+    else accion='<span class="badge b-ok">✓ OK</span>'+(canEditBodega()?' <button class="btn btn-mini" style="background:var(--mt-b);color:var(--mt-c);border-color:var(--mt-c);" data-p="'+x(e.placa)+'" onclick="openFotosOK(this.dataset.p)">📷 Fotos</button>':'');
+    var fotoModo=e.estado==='BODEGA_OK'?'s':e.estado==='MERCADO'?'m':'e';
+    var detalle=et+(tags?'<br>'+tags:'')+(e.estado==='DAÑADO'&&e.obs?'<br><span class="dmg-note">Obs: '+x(e.obs)+'</span>':'');
+    return'<tr><td class="tp">'+x(e.placa)+'</td><td>'+x(e.modelo)+'</td><td>'+bSt(e)+'</td><td>'+detalle+'</td><td>'+(e.etapa?dBadge(e.tsEtapa):'—')+'</td><td>'+tiempoEnBodega(e)+'</td><td class="tm">'+x(e.cliente||'—')+'</td><td>'+thumbs(e.placa,fotoModo)+'</td><td><div class="dmg-actions">'+accion+'</div></td></tr>';
+  }).join('');
+}
+
+function rMnt(){
+  var eq=eqArr().filter(function(e){return e.estado==='MANTENIMIENTO';});
+  g('e-a').textContent=eq.filter(function(e){return e.etapa==='A';}).length;
+  g('e-b').textContent=eq.filter(function(e){return e.etapa==='B';}).length;
+  g('e-c').textContent=eq.filter(function(e){return e.etapa==='C';}).length;
+  g('cc-mt').textContent=eq.length+' equipos';
+  if(mF!=='TODOS')eq=eq.filter(function(e){return e.etapa===mF;});
+  if(mS){var q=mS.toLowerCase();eq=eq.filter(function(e){return(e.placa+e.modelo).toLowerCase().indexOf(q)>=0;});}
+  eq.sort(function(a,b){return dd(b.tsEtapa)-dd(a.tsEtapa);});
+  var tb=g('tb-mt');
+  if(!eq.length){tb.innerHTML='<tr><td colspan="7" class="empty">Sin equipos</td></tr>';return;}
+  tb.innerHTML=eq.map(function(e){
+    var tags=(e.trabajos||[]).map(function(t){return'<span class="tag">'+x(t)+'</span>';}).join('');
+    return'<tr><td class="tp">'+x(e.placa)+'</td><td>'+x(e.modelo)+'</td><td>'+bEt(e.etapa)+'</td><td class="tm">'+(e.tsIngresoBodega?fF(e.tsIngresoBodega):'—')+'</td><td>'+dBadge(e.tsEtapa)+'</td><td>'+(tags||'—')+'</td><td>'+accionMantenimiento(e)+'</td></tr>';
+  }).join('');
+}
+
+function rRep(){
+  var rows=[].concat(DB.mantenimientos||[]);
+  rows.sort(function(a,b){return String(b.tsFin||'').localeCompare(String(a.tsFin||''));});
+  var total=rows.length;
+  var sumH=rows.reduce(function(n,r){return n+horasMant(r);},0);
+  var max=rows.reduce(function(best,r){return (!best||horasMant(r)>horasMant(best))?r:best;},null);
+  var byEt={};rows.forEach(function(r){if(r.etapa)byEt[r.etapa]=(byEt[r.etapa]||0)+1;});
+  var topEt=Object.keys(byEt).sort(function(a,b){return byEt[b]-byEt[a];})[0]||'—';
+  if(g('rp-total'))g('rp-total').textContent=total;
+  if(g('rp-prom'))g('rp-prom').textContent=total?fmtDur(Math.round(sumH/total)):'—';
+  if(g('rp-max'))g('rp-max').textContent=max?fmtDur(horasMant(max)):'—';
+  if(g('rp-max-p'))g('rp-max-p').textContent=max?(max.placa||'placa'):'placa';
+  if(g('rp-etapa'))g('rp-etapa').textContent=topEt;
+  var view=rows;
+  if(rpF!=='TODOS')view=view.filter(function(r){return r.etapa===rpF;});
+  if(rpS){var q=rpS.toLowerCase();view=view.filter(function(r){return String((r.placa||'')+(r.modelo||'')+(r.trabajos||[]).join('|')).toLowerCase().indexOf(q)>=0;});}
+  if(g('cc-rep'))g('cc-rep').textContent=view.length+' registros';
+  var tb=g('tb-rep'); if(!tb)return;
+  if(!view.length){tb.innerHTML='<tr><td colspan="7" class="empty">Sin historial de taller</td></tr>';return;}
+  tb.innerHTML=view.map(function(r){
+    var works=(r.trabajos||[]).map(function(t){return'<span class="tag">'+x(t)+'</span>';}).join('');
+    return'<tr><td class="tp">'+x(r.placa)+'</td><td>'+x(r.modelo||'—')+'</td><td>'+bEt(r.etapa)+'</td><td class="tm">'+dt(r.tsInicio)+'</td><td class="tm">'+dt(r.tsFin)+'</td><td>'+dBadgeTiempo(r)+'</td><td><div class="rep-work">'+(works||'—')+'</div></td></tr>';
+  }).join('');
+}
+function horasMant(r){
+  if(r&&r.tsInicio&&r.tsFin){
+    var h=Math.max(0,Math.round((new Date(r.tsFin).getTime()-new Date(r.tsInicio).getTime())/3600000));
+    if(isFinite(h))return h;
+  }
+  return (parseInt((r&&r.dias)||0,10)||0)*24;
+}
+function fmtDur(h){h=parseInt(h,10)||0;var d=Math.floor(h/24),hr=h%24;if(d&&hr)return d+'d '+hr+'h';if(d)return d+'d';return h+'h';}
+function dBadgeTiempo(r){var h=horasMant(r),d=Math.floor(h/24);var c=d<=3?'tr-ok':d<=14?'tr-wn':'tr-dn';return'<span class="tr '+c+'">'+fmtDur(h)+'</span>';}
+function rMov(){
+  var hoy=hoyStr();
+  var mesActual=hoy.substring(0,7);
+  // Solo movimientos de captación despachados (salidas reales al mercado)
+  var despachados=[].concat(DB.movimientos||[]).filter(function(m){
+    return m.tipo==='SALIDA'&&!esMovBaja(m)&&m.estado==='DESPACHADO';
+  }).sort(function(a,b){return b.ts.localeCompare(a.ts);});
+
+  // KPIs
+  var enMercado=eqArr().filter(function(e){return e.estado==='MERCADO';}).length;
+  var hoyD=despachados.filter(function(m){return (m.ts||'').substring(0,10)===hoy;}).length;
+  var mesD=despachados.filter(function(m){return (m.ts||'').substring(0,7)===mesActual;}).length;
+  var conContrato=despachados.filter(function(m){return m.fotosContrato&&(m.fotosContrato.f||m.fotosContrato.r);}).length;
+  if(g('mv-k-mer'))g('mv-k-mer').textContent=enMercado;
+  if(g('mv-k-hoy'))g('mv-k-hoy').textContent=hoyD;
+  if(g('mv-k-mes'))g('mv-k-mes').textContent=mesD;
+  if(g('mv-k-contrato'))g('mv-k-contrato').textContent=conContrato;
+
+  var view=despachados;
+  if(mvF==='MERCADO')view=view.filter(function(m){var e=DB.equipos&&DB.equipos[m.placa];return e&&e.estado==='MERCADO';});
+  else if(mvF==='RETORNADO')view=view.filter(function(m){var e=DB.equipos&&DB.equipos[m.placa];return !e||e.estado!=='MERCADO';});
+  if(mvS){var q=mvS.toLowerCase();view=view.filter(function(m){return(m.placa+m.modelo+(m.nomCli||'')+(m.codCli||'')).toLowerCase().indexOf(q)>=0;});}
+
+  g('cc-mv').textContent=view.length+' registros';
+  var tb=g('tb-mv');
+  if(!view.length){tb.innerHTML='<tr><td colspan="8" class="empty">Sin captaciones registradas</td></tr>';return;}
+  tb.innerHTML=view.map(function(m){
+    var eq=DB.equipos&&DB.equipos[m.placa];
+    var estadoActual=eq?bSt(eq):'<span class="badge b-dn">Sin stock</span>';
+    // fotos contrato — pueden estar en el movimiento o en el equipo
+    var fc=(m.fotosContrato)||(eq&&eq.fotosContrato)||{};
+    var hasFc=!!(fc.f||fc.r);
+    var fotosCont='';
+    if(fc.f)fotosCont+=thumbImg(fc.f,'Contrato Frontal — '+m.placa,'CF');
+    if(fc.r)fotosCont+=thumbImg(fc.r,'Contrato Reverso — '+m.placa,'CR');
+    if(!fotosCont)fotosCont='<span style="color:var(--mut);font-size:11px;">Sin fotos</span>';
+    if(canEditBodega())fotosCont+=' <button class="btn btn-mini" style="background:var(--c-b);color:var(--c-c);border-color:var(--c-c);vertical-align:middle;" data-p="'+x(m.placa)+'" data-ts="'+x(m.ts)+'" onclick="openEditarContrato(this.dataset.p,this.dataset.ts)">'+(hasFc?'✎':'📷 Subir')+'</button>';
+    var esHoy=(m.ts||'').substring(0,10)===hoy;
+    return'<tr'+(esHoy?' style="background:#f0fdf4;"':'')+'>'
+      +'<td class="tm">'+dt(m.ts)+'</td>'
+      +'<td class="tp">'+x(m.placa)+'</td>'
+      +'<td>'+x(m.modelo||'—')+'</td>'
+      +'<td class="tm" style="font-family:monospace;font-weight:700;">'+x(m.codCli||'—')+'</td>'
+      +'<td class="tm"><strong>'+x(m.nomCli||'—')+'</strong></td>'
+      +'<td class="tm">'+x(m.delegado||'—')+'</td>'
+      +'<td>'+estadoActual+'</td>'
+      +'<td>'+fotosCont+'</td>'
+      +'</tr>';
+  }).join('');
+}
+
+function rPlan(){
+  var hoy=hoyStr();
+  var semana=new Date();semana.setDate(semana.getDate()+7);
+  var semStr=semana.toISOString().split('T')[0];
+  var movs=[].concat(DB.movimientos||[]).filter(function(m){return esPlanPendiente(m);});
+  if(plF==='HOY')movs=movs.filter(function(m){return m.fechaPlan===hoy;});
+  else if(plF==='PROXIMAS')movs=movs.filter(function(m){return m.fechaPlan>=hoy&&m.fechaPlan<=semStr;});
+  else if(plF==='VENCIDAS')movs=movs.filter(function(m){return m.fechaPlan<hoy;});
+  if(plS){var q=plS.toLowerCase();movs=movs.filter(function(m){return(m.placa+m.modelo+(m.nomCli||'')).toLowerCase().indexOf(q)>=0;});}
+  movs.sort(function(a,b){return a.fechaPlan.localeCompare(b.fechaPlan);});
+  g('cc-plan').textContent=movs.length+' registros';
+  var tb=g('tb-plan');
+  if(!movs.length){tb.innerHTML='<tr><td colspan="9" class="empty">Sin planificaciones pendientes</td></tr>';return;}
+  tb.innerHTML=movs.map(function(m){
+    var esHoy=m.fechaPlan===hoy,esVenc=m.fechaPlan<hoy;
+    var est=esVenc?'<span class="badge b-dn">⚠ Vencida</span>':esHoy?'<span class="badge b-pl">📅 Hoy</span>':'<span class="badge b-mt">Próxima</span>';
+    var rowCls=esVenc?'plan-vencida':esHoy?'plan-hoy':'';
+    var accion=canEditBodega()?('<button class="btn btn-ok btn-mini" data-p="'+x(m.placa)+'" data-ts="'+x(m.ts)+'" onclick="openModalDespacho(this.dataset.p,this.dataset.ts)">🚚 Despachar</button> <button class="btn btn-mini" style="background:var(--dn-b);color:var(--dn-c);border-color:var(--dn-c);" data-p="'+x(m.placa)+'" data-ts="'+x(m.ts)+'" onclick="cancelarPlanUI(this.dataset.p,this.dataset.ts)">✕ Cancelar</button>'):'<span class="badge b-pl">Pendiente</span>';
+    return'<tr class="'+rowCls+'"><td class="tm">'+fF(m.fechaPlan)+'</td><td>'+est+'</td><td class="tp">'+x(m.placa)+'</td><td>'+x(m.modelo)+'</td><td class="tm" style="font-family:monospace;font-weight:700;">'+x(m.codCli||'—')+'</td><td class="tm">'+x(m.nomCli||'—')+'</td><td class="tm">'+x(m.delegado||'—')+'</td><td class="tm">'+dt(m.ts)+'</td><td>'+accion+'</td></tr>';
+  }).join('');
+}
+
+async function cancelarPlanUI(placa, ts){
+  if(!canEditBodega()){toast('No tienes permiso para cancelar','err');return;}
+  if(!confirm('¿Cancelar la planificación de la placa '+placa+'?\nEl equipo seguirá disponible en Bodega OK.'))return;
+  DB.movimientos=(DB.movimientos||[]).filter(function(m){return !(m.tipo==='SALIDA'&&m.placa===placa&&m.ts===ts);});
+  await push({action:'cancelarPlan',data:{placa:placa,ts:ts}});
+  rAll();
+  toast('Planificación cancelada — '+placa,'ok');
+}
+function openModalDespacho(placa, planTs){
+  if(!canEditBodega()){toast('No tienes permiso para despachar','err');return;}
+  var mov=(DB.movimientos||[]).find(function(m){return m.placa===placa&&m.ts===planTs&&esPlanPendiente(m);});
+  if(!mov){toast('La planificación ya no está disponible','err');return;}
+  var e=DB.equipos&&DB.equipos[placa];
+  if(!e){toast('La placa '+placa+' no existe en Bodega','err');return;}
+  if(e.estado!=='BODEGA_OK'&&e.estado!=='MERCADO'){toast('La placa '+placa+' no está disponible para despacho','err');return;}
+  g('dc-placa').value=placa;
+  g('dc-plan-ts').value=planTs;
+  g('dc-info').innerHTML='<strong>Placa:</strong> <span style="font-family:monospace;color:var(--acc);font-weight:700;">'+x(placa)+'</span> &nbsp; <strong>Modelo:</strong> '+x(e.modelo||'—')+'<br><strong>Cliente:</strong> '+x((mov.codCli||'—')+(mov.nomCli?' — '+mov.nomCli:''))+'&nbsp;&nbsp;<strong>Fecha plan.:</strong> '+fF(mov.fechaPlan)+'&nbsp;&nbsp;<strong>Transporte:</strong> '+x(mov.delegado||'—');
+  resetFotos3('dc');
+  bindFotoInputs();
+  updTs('ts-dc');
+  g('modal-despacho').classList.add('on');
+}
+function closeDespacho(){
+  g('modal-despacho').classList.remove('on');
+  resetFotos3('dc');
+}
+async function confirmarDespacho(){
+  if(!validarFotos3('dc')){toast('Toma las 2 fotos del contrato (frontal y reverso)','err');return;}
+  var placa=g('dc-placa').value;
+  var planTs=g('dc-plan-ts').value;
+  var fotosContrato=getFotos3('dc');
+  var mov=(DB.movimientos||[]).find(function(m){return m.placa===placa&&m.ts===planTs&&esPlanPendiente(m);});
+  if(!mov){toast('La planificación ya no está disponible','err');return;}
+  var e=DB.equipos&&DB.equipos[placa];
+  if(!e){toast('La placa '+placa+' no existe en Bodega','err');return;}
+  if(e.estado!=='BODEGA_OK'&&e.estado!=='MERCADO'){toast('La placa '+placa+' no está disponible para despacho','err');return;}
+  var btn=g('btn-dc');btn.disabled=true;btn.innerHTML='<span class="sp"></span>';
+  var tsDespacho=new Date().toISOString();
+  mov.tsPlanificacion=mov.ts;
+  mov.ts=tsDespacho;
+  mov.estado='DESPACHADO';
+  mov.fotosContrato=fotosContrato;
+  e.estado='MERCADO';
+  e.cliente=(mov.codCli||'')+' — '+(mov.nomCli||'');
+  e.tsSalidaMercado=tsDespacho;
+  e.tsUltMov=tsDespacho;
+  e.fotosContrato=fotosContrato;
+  rAll();
+  var ok=await push({action:'despacharSalida',data:mov,planTs:planTs,fotosContrato:fotosContrato});
+  btn.disabled=false;btn.innerHTML='🚚 Confirmar despacho';
+  closeDespacho();
+  toast((ok?'✅ ':'⚠ ')+'Despacho registrado — '+placa+' → '+(mov.nomCli||''),ok?'ok':'warn');
+  if(ok)loadData();
+}
+
+/* SUBIR / EDITAR CONTRATO (desde Movimientos) */
+function openEditarContrato(placa, ts){
+  if(!canEditBodega()){toast('No tienes permiso','err');return;}
+  resetFotos3('ct');
+  bindFotoInputs();
+  g('ct-placa').value=placa;
+  g('ct-ts').value=ts;
+  var mov=(DB.movimientos||[]).find(function(m){return m.placa===placa&&m.ts===ts;});
+  var eq=DB.equipos&&DB.equipos[placa];
+  var fc=(mov&&mov.fotosContrato)||(eq&&eq.fotosContrato)||{};
+  g('ct-info').innerHTML='<strong>Placa:</strong> <span style="font-family:monospace;color:var(--acc);font-weight:700;">'+x(placa)+'</span>'+(mov?'&nbsp;&nbsp;<strong>Cliente:</strong> '+x((mov.codCli||'—')+(mov.nomCli?' — '+mov.nomCli:'')):'');
+  ['f','r'].forEach(function(v){
+    if(fc[v]){
+      g('ct-foto-'+v).value=fc[v];
+      var prev=g('ct-prev-'+v); if(prev){prev.src=fotoSrc(fc[v]);prev.classList.add('on');}
+      var area=g('ct-area-'+v); if(area)area.classList.add('done');
+    }
+  });
+  actualizarCnt('ct');
+  g('modal-contrato').classList.add('on');
+}
+function closeContrato(){ g('modal-contrato').classList.remove('on'); resetFotos3('ct'); }
+async function confirmarContrato(){
+  if(!validarFotos3('ct')){toast('Faltan las 2 fotos del contrato (frontal y reverso)','err');return;}
+  var placa=g('ct-placa').value, ts=g('ct-ts').value;
+  var fotosContrato=getFotos3('ct');
+  var mov=(DB.movimientos||[]).find(function(m){return m.placa===placa&&m.ts===ts;});
+  if(mov)mov.fotosContrato=fotosContrato;
+  var eq=DB.equipos&&DB.equipos[placa]; if(eq)eq.fotosContrato=fotosContrato;
+  var btn=g('btn-ct');btn.disabled=true;btn.innerHTML='<span class="sp"></span>';
+  var ok=await push({action:'actualizarContrato',placa:placa,ts:ts,fotosContrato:fotosContrato});
+  btn.disabled=false;btn.innerHTML='💾 Guardar contrato';
+  closeContrato();rAll();
+  toast((ok?'✅ ':'⚠ ')+'Contrato actualizado — '+placa,ok?'ok':'warn');
+  if(ok)loadData();
+}
+
+/* MODAL SALIDA */
+function placasOK(){
+  var pendientes={};
+  (DB.movimientos||[]).forEach(function(m){if(esPlanPendiente(m))pendientes[m.placa]=true;});
+  return eqArr().filter(function(e){return e.estado==='BODEGA_OK'&&!pendientes[e.placa];}).sort(function(a,b){return String(a.placa).localeCompare(String(b.placa));});
+}
+function llenarPlacasSalida(){
+  var dl=g('s-placas-ok');if(!dl)return;
+  dl.innerHTML=placasOK().map(function(e){return '<option value="'+x(e.placa)+'">'+x(e.modelo||'')+'</option>';}).join('');
+}
+function setSelectVal(id,val){
+  var el=g(id);if(!el)return;
+  if(val&&![].some.call(el.options,function(o){return o.value===val;})){var op=document.createElement('option');op.value=val;op.textContent=val;el.appendChild(op);}
+  el.value=val||'';
+}
+function syncSalidaPlaca(){
+  var placa=g('s-placa').value.trim().toUpperCase();
+  g('s-placa').value=placa;
+  var e=DB.equipos&&DB.equipos[placa];
+  if(e&&e.estado==='BODEGA_OK')setSelectVal('s-mod',e.modelo||'');
+}
+function openModalSal(){
+  if(!(currentRole()==='admin'||currentRole()==='tecnico')){toast('No tienes permiso para registrar salidas','err');return;}
+  llenarPlacasSalida();
+  g('s-del').value='';
+  document.querySelectorAll('.transp-btn').forEach(function(b){b.classList.remove('sel');});
+  var hoy=hoyStr();
+  g('s-fecha-plan').value=hoy;
+  updTs('ts-sal');
+  g('modal-sal').classList.add('on');
+}
+function closeSal(){g('modal-sal').classList.remove('on');}
+
+async function saveSal(){
+  var placa=g('s-placa').value.trim().toUpperCase();
+  var e=DB.equipos&&DB.equipos[placa];
+  if(!e||e.estado!=='BODEGA_OK'){toast('Esa placa no está disponible en BODEGA OK','err');return;}
+  var modelo=e.modelo||g('s-mod').value;
+  setSelectVal('s-mod',modelo);
+  var codCli=g('s-codcli').value.trim();
+  var nomCli=g('s-nomcli').value.trim();
+  var fechaPlan=g('s-fecha-plan').value;
+  var transp=g('s-del').value;
+  if(!placa||!modelo||!codCli||!nomCli||!fechaPlan){toast('Completa placa, cliente y fecha planificada','err');return;}
+  if(!transp){toast('Selecciona quién lleva el equipo','err');return;}
+  var ts=new Date().toISOString();
+  var yaPlan=(DB.movimientos||[]).some(function(m){return esPlanPendiente(m)&&m.placa===placa;});
+  if(yaPlan){toast('La placa '+placa+' ya tiene una planificación pendiente','err');return;}
+  var mov={tipo:'SALIDA',placa:placa,modelo:modelo,codCli:codCli,nomCli:nomCli,cliente:codCli+' — '+nomCli,delegado:transp,fechaPlan:fechaPlan,estado:'PLANIFICADO',ts:ts};
+  DB.movimientos=DB.movimientos||[];DB.movimientos.push(mov);
+  var btn=g('btn-sal');btn.disabled=true;btn.innerHTML='<span class="sp"></span>';
+  var ok=await push({action:'planificarSalida',data:mov});
+  btn.disabled=false;btn.innerHTML='📅 Guardar planificación';
+  rAll();closeSal();
+  ['s-placa','s-codcli','s-nomcli'].forEach(function(id){g(id).value='';}); g('s-mod').value=''; g('s-fecha-plan').value=hoyStr(); g('s-del').value=''; document.querySelectorAll('.transp-btn').forEach(function(b){b.classList.remove('sel');});
+  toast((ok?'✅ ':'⚠ ')+'Salida planificada — '+placa+' → '+nomCli+' | '+fF(fechaPlan),ok?'ok':'warn');
+}
+
+/* MODAL ENTRADA */
+function openModalCap(){
+  if(!(currentRole()==='admin'||currentRole()==='tecnico')){toast('No tienes permiso para registrar entradas','err');return;}
+  bindFotoInputs();
+  g('c-del').value='MANUEL GUAMAN';
+  _et='';document.querySelectorAll('.esb').forEach(function(b){b.className='esb';});
+  ['ck-a','ck-b','ck-c'].forEach(function(id){g(id).className='ck-panel';});
+  resetFotos3('ce');
+  if(g('cap-fotos-box'))g('cap-fotos-box').style.display='';
+  updTs('ts-cap');g('modal-cap').classList.add('on');
+}
+function closeCap(){g('modal-cap').classList.remove('on');}
+function selEt(et,btn){
+  _et=et;document.querySelectorAll('.esb').forEach(function(b){b.className='esb';});
+  var cls={A:'s-a',B:'s-b',C:'s-c',DAÑADO:'s-d',NUEVO:'s-n'};
+  btn.className='esb '+(cls[et]||'');
+  ['ck-a','ck-b','ck-c'].forEach(function(id){g(id).className='ck-panel';});
+  if(et==='A')g('ck-a').className='ck-panel on';
+  else if(et==='B')g('ck-b').className='ck-panel on';
+  else if(et==='C')g('ck-c').className='ck-panel on';
+  // Equipo NUEVO: no requiere fotos, solo placa y modelo
+  var fb=g('cap-fotos-box');
+  if(fb) fb.style.display=(et==='NUEVO')?'none':'';
+}
+function getChecked(){
+  var res=[];
+  document.querySelectorAll('#ck-a input:checked,#ck-b input:checked,#ck-c input:checked').forEach(function(cb){res.push(cb.value);});
+  return res;
+}
+async function saveCap(){
+  var placa=g('c-placa').value.trim().toUpperCase();
+  var modelo=g('c-mod').value;
+  var cliente='';
+  var trabajos=getChecked();
+  if(!_et){toast('Selecciona el estado de ingreso','err');return;}
+  if(!placa||!modelo){toast('Completa placa y modelo','err');return;}
+  var esNuevo=(_et==='NUEVO');
+  if(!esNuevo && !validarFotos3('ce')){toast('Toma las 4 fotos obligatorias (frontal, trasera, interior, placa)','err');return;}
+  var ts=new Date().toISOString();
+  var esDan=(_et==='DAÑADO');
+  // NUEVO -> entra directo a Bodega OK (disponible). Dañado -> DAÑADO. Resto -> MANTENIMIENTO.
+  var estadoIng=esNuevo?'BODEGA_OK':(esDan?'DAÑADO':'MANTENIMIENTO');
+  var etapaIng=(esNuevo||esDan)?'':_et;
+  var trabajosIng=esNuevo?[]:trabajos;
+  var mov={tipo:'ENTRADA',placa:placa,modelo:modelo,cliente:cliente,delegado:'MANUEL GUAMAN',etapa:etapaIng,estado:estadoIng,trabajos:trabajosIng,nuevo:esNuevo,ts:ts};
+  DB.movimientos=DB.movimientos||[];DB.movimientos.push(mov);
+  var fe3=esNuevo?null:getFotos3('ce'); DB.equipos[placa]={placa:placa,modelo:modelo,estado:estadoIng,etapa:etapaIng,obs:'',cliente:'',delegado:'MANUEL GUAMAN',tsIngresoBodega:ts,tsEtapa:etapaIng?ts:'',tsUltMov:ts,trabajos:trabajosIng,histEtapas:[],fotosEntrada:fe3,fotosSalida:null};
+  var btn=g('btn-cap');btn.disabled=true;btn.innerHTML='<span class="sp"></span>';
+  await push({action:'entrada',data:mov,fotosEntrada:fe3});
+  btn.disabled=false;btn.innerHTML='↓ Registrar entrada';
+  rAll();closeCap();
+  g('c-placa').value=''; resetFotos3('ce');
+  g('c-mod').value='';_et='';
+  document.querySelectorAll('.esb').forEach(function(b){b.className='esb';});
+  ['ck-a','ck-b','ck-c'].forEach(function(id){g(id).className='ck-panel';});
+  document.querySelectorAll('#ck-a input,#ck-b input,#ck-c input').forEach(function(cb){cb.checked=false;});
+  toast('✅ Entrada registrada — '+placa,'ok');
+}
+
+/* LISTO */
+async function listo(placa){
+  var e=DB.equipos[placa];if(!e)return;
+  if(!confirm('¿Confirmar que placa '+placa+' terminó y queda disponible en bodega?'))return;
+  var ts=new Date().toISOString(),dias=dd(e.tsEtapa),tsInicio=e.tsEtapa||e.tsIngresoBodega||'';
+  if(!e.histEtapas)e.histEtapas=[];
+  e.histEtapas.push({etapa:e.etapa,tsInicio:tsInicio,tsFin:ts,dias:dias,trabajos:e.trabajos||[]});
+  var etFin=e.etapa;e.estado='BODEGA_OK';e.etapa='';e.trabajos=[];e.tsUltMov=ts;
+  await push({action:'finalizarMant',placa:placa,etapa:etFin,dias:dias,tsInicio:tsInicio,ts:ts,fotosSalida:{}});
+  rAll();toast('✅ Placa '+placa+' ('+etFin+', '+fmtDur(horasMant({tsInicio:tsInicio,tsFin:ts,dias:dias}))+') — bodega OK','ok');
+}
+
+function updTs(id){var el=g(id);if(el)el.textContent=dt(new Date().toISOString());}
+function fBo(v,el){bF=v;act(el,'pane-bod');rBod();}
+function fMt(v,el){mF=v;act(el,'pane-mnt');rMnt();}
+function fMv(v,el){mvF=v;act(el,'pane-mov');rMov();}
+function fRep(v,el){rpF=v;act(el,'pane-rep');rRep();}
+function fPl(v,el){plF=v;act(el,'pane-plan');rPlan();}
+function sBo(v){bS=v;rBod();}function sMt(v){mS=v;rMnt();}function sRep(v){rpS=v;rRep();}function sMv(v){mvS=v;rMov();}function sPl(v){plS=v;rPlan();}
+function act(el,pid){document.getElementById(pid).querySelectorAll('.fb').forEach(function(b){b.classList.remove('on');});el.classList.add('on');}
+function abrirKpi(pane,filtro){
+  if(!canPane(pane))return;
+  showPane(pane,document.querySelector('.pane-'+pane));
+  var botones=document.querySelectorAll('#pane-'+pane+' .fs .fb');
+  var btn=[].find.call(botones,function(b){return (b.getAttribute('onclick')||'').indexOf("'"+filtro+"'")>=0;});
+  var buscador=document.querySelector('#pane-'+pane+' .fs .fi');
+  if(buscador)buscador.value='';
+  if(pane==='bod'){bS='';fBo(filtro,btn);}
+  else if(pane==='mnt'){mS='';fMt(filtro,btn);}
+  else if(pane==='plan'){plS='';fPl(filtro,btn);}
+}
+function teclaKpi(ev,pane,filtro){
+  if(ev.key==='Enter'||ev.key===' '){ev.preventDefault();abrirKpi(pane,filtro);}
+}
+function showPane(n,el){if(!canPane(n)){n=allowedPanes()[0]||'bod';el=document.querySelector('.pane-'+n);}document.querySelectorAll('.pane').forEach(function(p){p.classList.remove('on');});document.querySelectorAll('.nt').forEach(function(t){t.classList.remove('on');});document.getElementById('pane-'+n).classList.add('on');if(el)el.classList.add('on');}
+
+function applyRoleUI(){
+  var role=currentRole(), panes=allowedPanes();
+  document.querySelectorAll('.pane-tab').forEach(function(b){
+    var ok=panes.some(function(p){return b.classList.contains('pane-'+p);});
+    b.style.display=ok?'':'none';
+  });
+  document.querySelectorAll('.role-admin').forEach(function(el){el.style.display=role==='admin'?'':'none';});
+  document.querySelectorAll('.role-tecnico').forEach(function(el){el.style.display=(role==='admin'||role==='tecnico')?'':'none';});
+  var first=panes[0]||'bod';
+  var active=document.querySelector('.pane.on');
+  var activeName=active?active.id.replace('pane-',''):'';
+  if(!canPane(activeName))showPane(first,document.querySelector('.pane-'+first));
+}
+function expCSV(){
+  var eq=eqArr();
+  var rows=[['Placa','Modelo','Estado','Etapa','Días','Tiempo en bodega','Cliente','Trabajos']];
+  eq.forEach(function(e){var h=e.estado==='BODEGA_OK'?horasDesde(e.tsUltMov||e.tsIngresoBodega):null;rows.push([e.placa,e.modelo,e.estado,e.etapa||'',e.etapa?dd(e.tsEtapa):'',h===null?'':fmtDur(h),e.cliente||'',(e.trabajos||[]).join('|')]);});
+  if(typeof XLSX!=='undefined'){
+    var ws=XLSX.utils.aoa_to_sheet(rows);
+    ws['!cols']=[{wch:10},{wch:14},{wch:12},{wch:8},{wch:12},{wch:16},{wch:24},{wch:30}];
+    var wb=XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb,ws,'Cabinets');
+    XLSX.writeFile(wb,'cabinets_'+hoyStr()+'.xlsx');
+    return;
+  }
+  var csv=rows.map(function(r){return r.map(function(c){return'"'+String(c).replace(/"/g,'""')+'"';}).join(',');}).join('\n');
+  var a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'}));a.download='cabinets_'+hoyStr()+'.csv';a.click();
+}
+
+function saveCfg(){
+  var url=g('cfg-url').value.trim();
+  if(!url){toast('Ingresa la URL','err');return;}
+  AURL=url;LOCAL=false;localStorage.setItem(CK,JSON.stringify({url:url,local:false}));
+  g('cfg-url-s').textContent=url;g('cfg-est').textContent='Configurado ✓';
+  toast('Guardado. Sincronizando...','ok');loadData();
+}
+function localMode(){LOCAL=true;AURL='';localStorage.setItem(CK,JSON.stringify({url:'',local:true}));setS('🗄 Local');toast('Modo local activo','ok');}
+
+
+var AUTH_KEY='cabinet_auth_session';
+var AUTH_ROLE_KEY='cabinet_auth_role';
+var AUTH_NAME_KEY='cabinet_auth_name';
+// Usuarios y claves se cargan en vivo desde el Sheet (pestaña "cabinets").
+// Lista vacía a propósito: no se almacenan credenciales en el repositorio.
+var AUTH_USERS={};
+var ROLE_PANES={admin:['res','bod','mnt','rep','mov','plan'],tecnico:['bod','mnt','plan'],ventas:['bod']};
+var _appStarted=false;
+
+function normUser(v){return String(v||'').trim().toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');}
+function authUser(u){
+  var key=normUser(u);
+  // 1) Usuarios del Sheet (pestaña "cabinets") — claves en vivo
+  if(DB&&DB.usuarios&&DB.usuarios.length){
+    for(var i=0;i<DB.usuarios.length;i++){
+      var x=DB.usuarios[i];
+      if(normUser(x.usuario)===key) return {pass:String(x.clave),role:(x.rol||'admin')};
+    }
+  }
+  // 2) Respaldo: lista fija del HTML
+  return AUTH_USERS[u]||AUTH_USERS[key]||null;
+}
+function currentRole(){try{return sessionStorage.getItem(AUTH_ROLE_KEY)||'';}catch(e){return '';}}
+function allowedPanes(){return ROLE_PANES[currentRole()]||[];}
+function canPane(n){return allowedPanes().indexOf(n)>=0;}
+function canAdmin(){return currentRole()==='admin';}
+function canEditBodega(){return currentRole()!=='ventas';}
+function isLoggedIn(){
+  try{return sessionStorage.getItem(AUTH_KEY)==='ok'&&!!currentRole();}catch(e){return false;}
+}
+function irALogin(){
+  llenarUsuariosLogin();
+  cargarUsuariosLogin();
+  g('login-bg').classList.add('on');
+  setTimeout(function(){var u=g('login-user');if(u)u.focus();},80);
+}
+// Se llena desde el Sheet vía cargarUsuariosLogin(); sin credenciales en el repo.
+var USUARIOS_DEFAULT=[];
+function llenarUsuariosLogin(){
+  var sel=g('login-user'); if(!sel) return;
+  var prev=sel.value;
+  var lista=(DB.usuarios&&DB.usuarios.length)?DB.usuarios:USUARIOS_DEFAULT;
+  sel.innerHTML='<option value="">Seleccionar usuario...</option>';
+  lista.forEach(function(u){
+    var op=document.createElement('option');
+    op.value=u.usuario;
+    op.textContent=u.usuario+' - '+String(u.rol).toUpperCase();
+    sel.appendChild(op);
+  });
+  if(prev) sel.value=prev;
+}
+function showLogin(){
+  llenarUsuariosLogin();
+  cargarUsuariosLogin();
+  g('login-bg').classList.add('on');
+  setTimeout(function(){var u=g('login-user');if(u)u.focus();},80);
+}
+// Trae los usuarios del Sheet (pestaña "cabinets") antes de validar el login,
+// para que cualquier cambio de clave funcione sin tocar el HTML.
+async function cargarUsuariosLogin(){
+  if(!AURL) return;
+  try{
+    var r=await fetch(AURL+'?action=getUsuarios',{redirect:'follow'});
+    var d=await r.json();
+    if(d&&d.usuarios&&d.usuarios.length){
+      DB.usuarios=d.usuarios;
+      llenarUsuariosLogin();
+    }
+  }catch(e){console.warn('No se pudieron cargar usuarios del Sheet:',e);}
+}
+function hideLogin(){
+  var bg=g('login-bg');
+  if(bg) bg.classList.remove('on');
+}
+function volverAModulos(){
+  volverAPortal();
+}
+function doLogin(ev){
+  if(ev) ev.preventDefault();
+  var u=(g('login-user').value||'').trim();
+  var p=g('login-pass').value||'';
+  var err=g('login-err');
+  var au=authUser(u);
+  if(au&&au.pass===p){
+    sessionStorage.setItem(AUTH_KEY,'ok');
+    sessionStorage.setItem(AUTH_ROLE_KEY,au.role);
+    sessionStorage.setItem(AUTH_NAME_KEY,u.toUpperCase());
+    if(err)err.classList.remove('on');
+    hideLogin();
+    if(_appStarted){applyRoleUI();rAll();}else startApp();
+    return false;
+  }
+  if(err)err.classList.add('on');
+  g('login-pass').value='';
+  g('login-pass').focus();
+  return false;
+}
+function logoutApp(){
+  sessionStorage.removeItem(AUTH_KEY);
+  sessionStorage.removeItem(AUTH_ROLE_KEY);
+  sessionStorage.removeItem(AUTH_NAME_KEY);
+  localStorage.removeItem(AUTH_KEY);
+  _appStarted=false;
+  window.location.href='./index.html';
+}
+function startApp(){
+  if(_appStarted) return;
+  if(!isLoggedIn()){showLogin();return;}
+  _appStarted=true;
+  hideLogin();
+  applyRoleUI();
+  init();
+}
+function registerPWA(){
+  if('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')){
+    window.addEventListener('load', function(){
+      navigator.serviceWorker.register('./sw.js').catch(function(err){
+        console.warn('No se pudo registrar la app offline:', err);
+      });
+    });
+  }
+}
+registerPWA();
+startApp();
+setInterval(function(){
+  if(g('modal-sal')&&g('modal-sal').classList.contains('on'))updTs('ts-sal');
+  if(g('modal-cap')&&g('modal-cap').classList.contains('on'))updTs('ts-cap');
+  if(g('modal-despacho')&&g('modal-despacho').classList.contains('on'))updTs('ts-dc');
+},1000);
+</script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
