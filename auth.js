@@ -5,7 +5,7 @@
 
 var OPA = (function () {
   // URL del Apps Script unificado (actualizar tras nuevo despliegue)
-  var GAS = 'https://script.google.com/macros/s/AKfycbzAc1BH1wSGtbdudVQ4rwBk21DRRT_d2Ypb5xDUGXynDuAt7vTgxbICWgUcc9cYETnn/exec';
+  var GAS = 'https://script.google.com/macros/s/AKfycbzBzl8XzPUuffEPu-sbyQXTTvuCAUSL9wUwLTbciUJrfJj7pkOhmZ2p-HAnFRBT5wVr/exec';
   // URL del portal de login
   var PORTAL = 'https://contabilidadopaustrorio-creator.github.io/OPAUSTROAPP/';
 
