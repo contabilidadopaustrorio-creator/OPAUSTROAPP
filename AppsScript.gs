@@ -66,6 +66,17 @@ function doGet(e) {
     var p      = (e && e.parameter) || {};
     var action = p.action || '';
 
+    // Acceso directo sin parámetros → estado del sistema
+    if (!action && !p.token) {
+      return jsonResponse({
+        status: 'ok',
+        app: 'OPAUSTRO API v4.1',
+        message: 'Sistema activo. Inicia sesión desde el portal corporativo.',
+        portal: MODULE_URLS.portal,
+        ts: new Date().toISOString()
+      });
+    }
+
     if (action === 'login')           return jsonResponse(handleLogin(p.usuario, p.clave));
     if (action === 'validateSession') return jsonResponse(handleValidateSession(p.token));
     if (action === 'logout')          { handleLogout(p.token); return jsonResponse({ ok: true }); }
@@ -152,8 +163,13 @@ function handleLogin(rawUsuario, rawClave) {
   if (!rawUsuario || !rawClave) return { ok: false, error: 'Usuario y clave requeridos.' };
   var u    = normUser(rawUsuario);
   var pass = String(rawClave).trim();
-  purgeExpiredSessions();
-  var found = buscarEnSheet(u, pass);
+  try { purgeExpiredSessions(); } catch(ignore) {}
+  var found;
+  try {
+    found = buscarEnSheet(u, pass);
+  } catch(e) {
+    return { ok: false, error: 'Error al acceder al registro de usuarios: ' + e.message + '. Ejecuta configurarSistema() en el editor de Apps Script.' };
+  }
   if (!found) return { ok: false, error: 'Usuario o clave incorrectos.' };
   var rol           = (found.rol || 'logistica').toLowerCase();
   var modulos       = ROL_MODULOS[rol] || ['portal'];
